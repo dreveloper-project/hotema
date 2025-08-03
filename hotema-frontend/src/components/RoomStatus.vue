@@ -49,7 +49,7 @@ const rooms = ref([
     @apply w-[60vw] mt-3  gap-2 flex flex-wrap  ;
 }
 .room-card {
-    @apply bg-[#f4f4f6] relative rounded-lg shadow-md p-4 w-[20%] h-[8rem] text-[0.87rem] border border-[#333] text-[#333] cursor-pointer transition-all duration-75 hover:scale-105;
+    @apply bg-[#f8f8f8] relative rounded-lg shadow-md p-4 w-[20%] h-[8rem] text-[0.87rem] border border-[#333] text-[#333] cursor-pointer transition-all duration-75 hover:scale-105;
 }
 .room-card p {
     @apply italic;
