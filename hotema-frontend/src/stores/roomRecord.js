@@ -55,13 +55,13 @@ export const useRoomRecordStore = defineStore('roomRecord', {
 
     handleError(err) {
       if (err.response) {
-        // ✅ Error dari server (400, 404, 500)
+    
         this.error = err.response.data?.error || 'Terjadi kesalahan dari server.'
       } else if (err.request) {
-        // ✅ Request terkirim tapi tidak ada respon
+   
         this.error = 'Tidak ada respon dari server.'
       } else {
-        // ✅ Kesalahan lainnya
+     
         this.error = 'Kesalahan tidak terduga: ' + err.message
       }
     }

@@ -6,6 +6,8 @@ from django.utils import timezone
 from django.core import serializers
 from django.utils.dateparse import parse_date
 import json
+from .models import Room
+from rest_framework import status
 
 class RoomRecordTodayView(APIView):
     permission_classes = [IsAuthenticated]
@@ -60,3 +62,30 @@ class RoomRecordByDateView(APIView):
             })
 
         return Response(data)
+
+class RoomCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        nama_kamar = request.data.get('nama_kamar')
+        tipe_kamar = request.data.get('tipe_kamar')
+
+        # Validasi sederhana
+        if not nama_kamar or not tipe_kamar:
+            return Response(
+                {"error": "Field 'nama_kamar' dan 'tipe_kamar' wajib diisi."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Simpan ke database
+        room = Room.objects.create(
+            room_name=nama_kamar,
+            room_type=tipe_kamar
+        )
+
+        return Response({
+            "message": "Kamar berhasil ditambahkan.",
+            "room_id": room.room_id,
+            "room_name": room.room_name,
+            "room_type": room.room_type
+        }, status=status.HTTP_201_CREATED)

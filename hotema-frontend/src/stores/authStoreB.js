@@ -23,27 +23,31 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async login(credentials) {
-      try {
-        this.error = null
-        const res = await api.post('accounts/login/', credentials)
+  try {
+    this.error = null
+    const res = await api.post('accounts/login/', credentials)
 
-        const token = res.data.access
-        this.token = token
-        localStorage.setItem('token', token)
+    const accessToken = res.data.access
+    const refreshToken = res.data.refresh
 
-        this.user = res.data.user || { username: credentials.username }
+    this.token = accessToken
+    localStorage.setItem('token', accessToken)
+    localStorage.setItem('refresh_token', refreshToken)
 
-        return true
-      } catch (err) {
-        this.error = err.response?.data || { detail: 'Terjadi kesalahan saat login.' }
-        return false
-      }
-    },
+    this.user = res.data.user || { username: credentials.username }
+
+    return true
+  } catch (err) {
+    this.error = err.response?.data || { detail: 'Terjadi kesalahan saat login.' }
+    return false
+  }
+},
 
     logout() {
       this.user = null
       this.token = null
       localStorage.removeItem('token')
+      localStorage.removeItem('refresh_token')
     },
   },
 })

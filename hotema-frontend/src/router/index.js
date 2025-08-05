@@ -7,6 +7,7 @@ import SettingsView from '@/views/SettingsView.vue'
 import AssignmentView from '@/views/AssignmentView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
+import AddRoomView from '@/views/Assignment/AddRoomView.vue'
 
 const routes = [
   {
@@ -52,6 +53,15 @@ const routes = [
     meta: {
       requiresAuth: true,
       title: 'Penugasan | Sistem Manajemen Tim Housekeeping'
+    },
+  },
+  {
+    path: '/assignment/add/room',
+    name: 'assignment-add-room',
+    component: AddRoomView,
+    meta: {
+      requiresAuth: true,
+      title: 'Penugasan | Tambah Data Kamar Baru'
     },
   },
   {

@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-
+import ProgressSpinner from 'primevue/progressspinner';
 const props = defineProps({
   records: {
     type: Array,
@@ -9,7 +9,7 @@ const props = defineProps({
   }
 })
 
-// Ubah data dari backend agar cocok dengan format lama
+
 const rooms = computed(() =>
   props.records.map(record => ({
     room_name: record.room_name,
@@ -20,10 +20,10 @@ const rooms = computed(() =>
 </script>
 
 <template>
-  <div id="room-status" class="font-poppins">
+  <div id="room-status" class="font-poppins " >
     <!-- Loading -->
     <template v-if="records === null">
-      <div>Memuat data...</div>
+      <ProgressSpinner />
     </template>
 
     <!-- Data -->
@@ -41,11 +41,11 @@ const rooms = computed(() =>
 @reference "tailwindcss";
 
 #room-status {
-  @apply w-[60vw] mt-3 gap-2 flex flex-wrap;
+  @apply w-[70vw] mt-3 gap-1 flex flex-wrap px-4 py-4 bg-[#ffffff] rounded-lg shadow-md justify-around;
 }
 
 .room-card {
-  @apply bg-[#f8f8f8] relative rounded-lg shadow-md p-4 w-[20%] h-[8rem] text-[0.87rem] border border-[#333] text-[#333] cursor-pointer transition-all duration-75 hover:scale-105;
+  @apply bg-[#910a67]  relative rounded-lg shadow-md p-4 my-3 w-[24%] h-[8rem] text-[0.87rem] border border-[#fff] text-[#fff] cursor-pointer transition-all duration-75 hover:scale-105;
 }
 
 .room-card p {
@@ -59,4 +59,5 @@ const rooms = computed(() =>
 .room-card h4 {
   @apply block absolute top-[75%] left-[43%] text-[0.73rem] text-right;
 }
+
 </style>

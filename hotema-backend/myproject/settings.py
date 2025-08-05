@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 from decouple import config, Csv
+from datetime import timedelta
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -158,7 +160,9 @@ CORS_ALLOWED_ORIGINS = [
 
 SIMPLE_JWT = {
     'USER_ID_FIELD': 'user_id',       # sesuai field yang kamu pakai
-    'USER_ID_CLAIM': 'user_id',       # nama yang akan muncul di token
+    'USER_ID_CLAIM': 'user_id',  
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),     
 }
 
 
