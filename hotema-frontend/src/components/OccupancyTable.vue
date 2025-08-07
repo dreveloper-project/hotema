@@ -59,11 +59,11 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="tableContainer" class="">
-    <table class="shadow-md font-poppins  text-center border border-gray-600 border-collapse w-[60%] rounded-md">
+  <div ref="tableContainer" class="bg-[#fff] rounded-lg shadow-md py-5 px-5 w-[68vw] flex  justify-center flex-col">
+    <table class="shadow-md font-poppins bg-white rounded-lg text-center border border-gray-600 border-collapse ">
       <thead>
         <tr>
-          <th class="border border-solid border-red-500" v-for="(date, index) in readRequestedDate()" :key="index">
+          <th class="bg-[#333] text-white" v-for="(date, index) in readRequestedDate()" :key="index">
             {{ date }}
           </th>
         </tr>
@@ -84,7 +84,7 @@ onBeforeUnmount(() => {
             <!-- Dropdown muncul tepat di bawah sel -->
             <div
               v-if="activeCell.row === r && activeCell.col === value"
-              class="absolute left-0 top-full mt-1 z-10 bg-white border p-2 border-gray-400 rounded-md shadow-md w-[100px]"
+              class="absolute left-0 top-full mt-1 z-10 bg-white border p-2 border-gray-400  shadow-md w-[100px]"
             >
               <button class="w-full text-left px-2 py-1 hover:bg-gray-100 cursor-pointer" @click="editAction">Edit</button>
               <button class="w-full text-left px-2 py-1 hover:bg-gray-100 cursor-pointer" @click="deleteAction">Hapus</button>
@@ -94,7 +94,7 @@ onBeforeUnmount(() => {
       </tbody>
     </table>
 
-    <div class="flex justify-between w-[60%] px-2 my-2 font-poppins">
+    <div class="flex justify-between  px-2 my-2 font-poppins">
       <button class="button-control">
         <IconMaterialSymbolsLightSkipPreviousRounded class="text-[1rem]" />
         Sebelumnya
@@ -117,7 +117,7 @@ onBeforeUnmount(() => {
 td,
 th {
   border: 1.5px groove #949494;
-  border-radius: 8px;
+
   @apply px-5 py-3;
 }
 </style>
