@@ -1,4 +1,4 @@
-// stores/occupancy.js
+ // stores/occupancy.js
 import { defineStore } from 'pinia'
 import api from '@/lib/axios'
 

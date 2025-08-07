@@ -22,7 +22,14 @@ onMounted(loadOccupancy)
 
 // Data dan kontrol form
 const addMenu = ref(false)
-const roomOptions = [101, 102, 103, 105, 106, 108]
+
+
+const roomOptions = ref([])
+
+onMounted(async () => {
+  await occupancyStore.fetchRoomNames()
+  roomOptions.value = occupancyStore.roomNames
+})
 const selectedRoom = ref(null)
 const checkInDate = ref(null)
 const checkOutDate = ref(null)
@@ -39,13 +46,7 @@ onMounted(() => document.addEventListener('click', handleClickOutside))
 onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 
 // Submit
-function submitForm() {
-  alert(`Kamar: ${selectedRoom.value}, Check-in: ${checkInDate.value}, Check-out: ${checkOutDate.value}`)
-  addMenu.value = false
-  selectedRoom.value = null
-  checkInDate.value = null
-  checkOutDate.value = null
-}
+
 </script>
 
 <template>
@@ -125,5 +126,6 @@ function submitForm() {
 </template>
 
 <style scoped>
-/* Tidak ada tambahan, semua pakai tailwind */
+
 </style>
+

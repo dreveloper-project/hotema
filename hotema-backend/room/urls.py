@@ -6,4 +6,5 @@ urlpatterns = [
     path('room-records/by-date/', views.RoomRecordByDateView.as_view(), name='room-records-by-date'),
     path('create/', views.RoomCreateView.as_view(), name='room-create'),
     path('occupancy-table/view/', views.OccupancyTableView.as_view(), name='occupancy-table-view'),
+    
 ]
