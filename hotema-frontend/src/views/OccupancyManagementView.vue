@@ -4,6 +4,21 @@ import OccupancyTable from '@/components/OccupancyTable.vue'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import Calendar from 'primevue/calendar'
 import Dropdown from 'primevue/dropdown'
+import { useOccupancyStore } from '@/stores/occupancy'
+
+
+const occupancyStore = useOccupancyStore()
+
+// Definisikan tanggalnya di komponen
+const startDate = ref('2025-08-04')
+const endDate = ref('2025-08-09')
+
+// Panggil saat tombol diklik atau saat mounted
+const loadOccupancy = () => {
+  occupancyStore.fetchOccupancy(startDate.value, endDate.value)
+}
+
+onMounted(loadOccupancy)
 
 // Data dan kontrol form
 const addMenu = ref(false)
@@ -93,7 +108,37 @@ function submitForm() {
     </div>
 
     <!-- Komponen Tabel -->
-    <OccupancyTable />
+    <!-- <OccupancyTable /> -->
+
+
+
+    <!--  -->
+
+    <!--  -->
+
+ <div>
+    <h2>Occupancy Data</h2>
+
+    <div v-if="occupancyStore.loading">Memuat data...</div>
+    <div v-else-if="occupancyStore.error">{{ occupancyStore.error }}</div>
+    <div v-else>
+      <div v-for="(row, i) in occupancyStore.rows" :key="i" class="mb-4">
+        <p><strong>Kamar {{ row.id }}</strong></p>
+        <ul>
+          <li
+            v-for="(status, j) in row.days"
+            :key="j"
+          >
+            {{ occupancyStore.headers[j] }}: {{ status.status || 'Kosong' }}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+    <!--  -->
+
+    <!--  -->
   </main>
 </template>
 
