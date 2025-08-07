@@ -1,90 +1,131 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useOccupancyStore } from '@/stores/occupancy'
+import { storeToRefs } from 'pinia'
+import ProgressSpinner from 'primevue/progressspinner';
+// Store Pinia
+const store = useOccupancyStore()
+const { headers, rows, loading, error } = storeToRefs(store)
 
-const occupancyWrap = {
-  requestedDate: ['19 Juli', '20 Juli', '21 Juli', '22 Juli', '23 Juli'],
-  requestedRoom: {
-    101: { '19 Juli': '', '20 Juli': '', '21 Juli': 'IN', '22 Juli': 'IN', '23 Juli': 'OUT' },
-    102: { '19 Juli': 'IN', '20 Juli': 'OUT', '21 Juli': '', '22 Juli': '', '23 Juli': '' },
-    103: { '19 Juli': '', '20 Juli': '', '21 Juli': 'IN', '22 Juli': 'IN', '23 Juli': 'OUT' },
-    105: { '19 Juli': '', '20 Juli': '', '21 Juli': 'IN', '22 Juli': 'IN', '23 Juli': 'IN' },
-    106: { '19 Juli': 'OUT', '20 Juli': '', '21 Juli': '', '22 Juli': '', '23 Juli': '' },
-    108: { '19 Juli': 'OUT', '20 Juli': '', '21 Juli': 'IN', '22 Juli': 'IN', '23 Juli': 'IN' },
+const activeCell = ref({ row: null, col: null })
+const tableContainer = ref(null)
+
+// Navigasi tanggal
+const currentStartDate = ref(new Date())
+const rangeDays = 5
+
+// Format tanggal untuk request ke server: YYYY-MM-DD
+function formatForAPI(date) {
+  return date.toISOString().split('T')[0] // e.g. "2025-08-07"
+}
+
+// Format tanggal untuk ditampilkan di header: "03 Agustus"
+function formatForDisplay(date) {
+  return date.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'long',
+  })
+}
+
+// Ambil array 5 hari dari start date
+function getDateRange(startDate) {
+  const displayDates = []
+  let start = new Date(startDate)
+  for (let i = 0; i < rangeDays; i++) {
+    const date = new Date(start)
+    date.setDate(start.getDate() + i)
+    displayDates.push({
+      raw: formatForAPI(date),
+      label: formatForDisplay(date)
+    })
   }
-};
-
-function readRequestedDate() {
-  return [''].concat(occupancyWrap.requestedDate);
+  return displayDates
 }
 
-function readRequestedRoom() {
-  return occupancyWrap.requestedRoom;
+// Fetch data
+function loadData() {
+  const range = getDateRange(currentStartDate.value)
+  const start = range[0].raw
+  const end = range[range.length - 1].raw
+  store.fetchOccupancy(start, end)
 }
 
-const activeCell = ref({ row: null, col: null });
-const tableContainer = ref(null);
+// Navigasi tombol
+function goPrevious() {
+  currentStartDate.value.setDate(currentStartDate.value.getDate() - rangeDays)
+  loadData()
+}
 
+function goNext() {
+  currentStartDate.value.setDate(currentStartDate.value.getDate() + rangeDays)
+  loadData()
+}
+
+// Dropdown cell
 function toggleDropdown(row, col) {
   if (activeCell.value.row === row && activeCell.value.col === col) {
-    activeCell.value = { row: null, col: null };
+    activeCell.value = { row: null, col: null }
   } else {
-    activeCell.value = { row, col };
+    activeCell.value = { row, col }
   }
 }
 
 function editAction() {
-  alert(`Edit: Room ${activeCell.value.row}, Date ${activeCell.value.col}`);
-  activeCell.value = { row: null, col: null };
+  alert(`Edit: Room ${activeCell.value.row}, Date ${activeCell.value.col}`)
+  activeCell.value = { row: null, col: null }
 }
 
 function deleteAction() {
-  alert(`Delete: Room ${activeCell.value.row}, Date ${activeCell.value.col}`);
-  activeCell.value = { row: null, col: null };
+  alert(`Delete: Room ${activeCell.value.row}, Date ${activeCell.value.col}`)
+  activeCell.value = { row: null, col: null }
 }
 
-// Hide dropdown on click outside
 function handleClickOutside(event) {
   if (tableContainer.value && !tableContainer.value.contains(event.target)) {
-    activeCell.value = { row: null, col: null };
+    activeCell.value = { row: null, col: null }
   }
 }
 
 onMounted(() => {
-  window.addEventListener('click', handleClickOutside);
-});
+  window.addEventListener('click', handleClickOutside)
+  loadData()
+})
 
 onBeforeUnmount(() => {
-  window.removeEventListener('click', handleClickOutside);
-});
+  window.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <template>
-  <div ref="tableContainer" class="bg-[#fff] rounded-lg shadow-md py-5 px-5 w-[68vw] flex  justify-center flex-col">
-    <table class="shadow-md font-poppins bg-white rounded-lg text-center border border-gray-600 border-collapse ">
+  <div ref="tableContainer" class="bg-[#fff] rounded-lg shadow-md py-5 px-5 w-[68vw] flex justify-center flex-col">
+    <div v-if="loading" class="flex justify-center"><ProgressSpinner /></div>
+    <div v-else-if="error" class="text-center text-red-500">{{ error }}</div>
+
+    <table v-else class="shadow-md font-poppins bg-white rounded-lg text-center border border-gray-600 border-collapse">
       <thead>
         <tr>
-          <th class="bg-[#333] text-white" v-for="(date, index) in readRequestedDate()" :key="index">
+          <th class="bg-[#333] text-white">Kamar</th>
+          <th class="bg-[#333] text-white" v-for="(date, index) in headers" :key="index">
             {{ date }}
           </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="r in Object.keys(readRequestedRoom())" :key="r">
-          <td>{{ r }}</td>
+        <tr v-for="(row, rowIndex) in rows" :key="row.id">
+          <td>{{ row.id }}</td>
           <td
-            v-for="(i, value) in readRequestedRoom()[r]"
-            :key="value"
+            v-for="(day, colIndex) in row.days"
+            :key="colIndex"
             class="relative cursor-pointer"
-            @click.stop="toggleDropdown(r, value)"
+            @click.stop="toggleDropdown(row.id, headers[colIndex])"
           >
-            <span v-if="i === 'IN'" class="text-[#29ffad]">{{ i }}</span>
-            <span v-else-if="i === 'OUT'" class="text-[#ff3737]">{{ i }}</span>
-            <span v-else>{{ i }}</span>
+            <span v-if="day.status === 'IN'" class="text-[#29ffad]">{{ day.status }}</span>
+            <span v-else-if="day.status === 'OUT'" class="text-[#ff3737]">{{ day.status }}</span>
+            <span v-else>{{ day.status }}</span>
 
-            <!-- Dropdown muncul tepat di bawah sel -->
             <div
-              v-if="activeCell.row === r && activeCell.col === value"
-              class="absolute left-0 top-full mt-1 z-10 bg-white border p-2 border-gray-400  shadow-md w-[100px]"
+              v-if="activeCell.row === row.id && activeCell.col === headers[colIndex]"
+              class="absolute left-0 top-full mt-1 z-10 bg-white border p-2 border-gray-400 shadow-md w-[100px]"
             >
               <button class="w-full text-left px-2 py-1 hover:bg-gray-100 cursor-pointer" @click="editAction">Edit</button>
               <button class="w-full text-left px-2 py-1 hover:bg-gray-100 cursor-pointer" @click="deleteAction">Hapus</button>
@@ -94,12 +135,12 @@ onBeforeUnmount(() => {
       </tbody>
     </table>
 
-    <div class="flex justify-between  px-2 my-2 font-poppins">
-      <button class="button-control">
+    <div class="flex justify-between px-2 my-2 font-poppins">
+      <button class="button-control" @click="goPrevious">
         <IconMaterialSymbolsLightSkipPreviousRounded class="text-[1rem]" />
         Sebelumnya
       </button>
-      <button class="button-control">
+      <button class="button-control" @click="goNext">
         Berikutnya
         <IconMaterialSymbolsLightSkipNextRounded />
       </button>
@@ -117,7 +158,6 @@ onBeforeUnmount(() => {
 td,
 th {
   border: 1.5px groove #949494;
-
   @apply px-5 py-3;
 }
 </style>

@@ -108,7 +108,7 @@ function submitForm() {
     </div>
 
     <!-- Komponen Tabel -->
-    <!-- <OccupancyTable /> -->
+    <OccupancyTable />
 
 
 
@@ -116,25 +116,7 @@ function submitForm() {
 
     <!--  -->
 
- <div>
-    <h2>Occupancy Data</h2>
-
-    <div v-if="occupancyStore.loading">Memuat data...</div>
-    <div v-else-if="occupancyStore.error">{{ occupancyStore.error }}</div>
-    <div v-else>
-      <div v-for="(row, i) in occupancyStore.rows" :key="i" class="mb-4">
-        <p><strong>Kamar {{ row.id }}</strong></p>
-        <ul>
-          <li
-            v-for="(status, j) in row.days"
-            :key="j"
-          >
-            {{ occupancyStore.headers[j] }}: {{ status.status || 'Kosong' }}
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
+ 
 
     <!--  -->
 
