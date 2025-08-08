@@ -10,6 +10,7 @@ from .models import Room
 from rest_framework import status
 from datetime import timedelta
 from django.db.models import Q
+from datetime import datetime, timedelta
 
 class RoomRecordTodayView(APIView):
     permission_classes = [IsAuthenticated]
@@ -182,3 +183,110 @@ class OccupancyTableView(APIView):
                 'rows': rows
             }
         })
+class GetAllRoomView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        rooms = Room.objects.all().order_by('room_name')
+        room_names = [room.room_name for room in rooms if room.room_name]
+
+        return Response({
+            'rooms': room_names
+        })
+
+class AddOccupancyDataView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        room_name = request.data.get('room_name')
+        check_in_date = request.data.get('check_in_date')
+        check_out_date = request.data.get('check_out_date')
+        
+        if not all([room_name, check_in_date, check_out_date]):
+            return Response(
+                {"error": "room_name, check_in_date, and check_out_date are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Parse dates dan majukan 1 hari
+            check_in = datetime.strptime(check_in_date, '%Y-%m-%d').date() + timedelta(days=1)
+            check_out = datetime.strptime(check_out_date, '%Y-%m-%d').date() + timedelta(days=1)
+            
+            if check_in >= check_out:
+                return Response(
+                    {"error": "Check-out date must be after check-in date."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Ambil room berdasarkan nama
+            try:
+                room = Room.objects.get(room_name=room_name)
+            except Room.DoesNotExist:
+                return Response(
+                    {"error": f"Room '{room_name}' not found."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            current_date = check_in
+            records_created = []
+            
+            # Buat record dari check-in sampai sebelum check-out
+            while current_date < check_out:
+                RoomRecord.objects.filter(
+                    room=room,
+                    date=current_date
+                ).delete()
+                
+                new_record = RoomRecord.objects.create(
+                    room=room,
+                    guest_status="Checked In",
+                    cleanliness_status="Occupied",
+                    date=current_date
+                )
+                records_created.append({
+                    'rr_id': new_record.rr_id,
+                    'room_name': room.room_name,
+                    'date': str(current_date),
+                    'guest_status': new_record.guest_status,
+                    'action': 'created_or_overwritten'
+                })
+                
+                current_date += timedelta(days=1)
+            
+            # Buat record checkout
+            RoomRecord.objects.filter(
+                room=room,
+                date=check_out
+            ).delete()
+            
+            checkout_record = RoomRecord.objects.create(
+                room=room,
+                guest_status="Checked Out",
+                cleanliness_status="Vacant",
+                date=check_out
+            )
+            records_created.append({
+                'rr_id': checkout_record.rr_id,
+                'room_name': room.room_name,
+                'date': str(check_out),
+                'guest_status': checkout_record.guest_status,
+                'action': 'created_or_overwritten'
+            })
+            
+            return Response({
+                'message': 'Occupancy data added successfully (dates shifted +1 day)',
+                'records_created': len(records_created),
+                'details': records_created
+            }, status=status.HTTP_201_CREATED)
+            
+        except ValueError as e:
+            return Response(
+                {"error": f"Invalid date format: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"An error occurred: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

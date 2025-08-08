@@ -8,6 +8,7 @@ export const useOccupancyStore = defineStore('occupancy', {
     rows: [],      // <-- data kamar dan status hariannya
     loading: false,
     error: null,
+    roomNames: [],  
   }),
 
   actions: {
@@ -37,6 +38,42 @@ export const useOccupancyStore = defineStore('occupancy', {
         this.handleError(err)
         this.headers = []
         this.rows = []
+      } finally {
+        this.loading = false
+      }
+    },
+    async fetchRoomNames() {
+      this.error = null
+      try {
+        const response = await api.get('room/get/all/')
+        const rooms = response.data?.rooms
+
+        if (Array.isArray(rooms)) {
+          this.roomNames = rooms
+        } else {
+          this.roomNames = []
+          this.error = 'Data kamar tidak valid.'
+        }
+      } catch (err) {
+        this.handleError(err)
+        this.roomNames = []
+      }
+    },
+    async addOccupancyData(roomName, checkInDate, checkOutDate) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const response = await api.post('room/add-occupancy/', {
+          room_name: roomName,
+          check_in_date: checkInDate,
+          check_out_date: checkOutDate
+        })
+
+        return response.data
+      } catch (err) {
+        this.handleError(err)
+        throw err
       } finally {
         this.loading = false
       }
