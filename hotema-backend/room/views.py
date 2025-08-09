@@ -11,7 +11,7 @@ from rest_framework import status
 from datetime import timedelta
 from django.db.models import Q
 from datetime import datetime, timedelta
-
+from django.shortcuts import get_object_or_404
 class RoomRecordTodayView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -173,7 +173,10 @@ class OccupancyTableView(APIView):
             # Populate status for each day in the date range
             for date in date_range:
                 status = records_map.get(room.room_id, {}).get(date, None)
-                room_data['days'].append({'status': status})
+                room_data['days'].append({
+                    'status': status,
+                    'date': date.strftime('%Y-%m-%d')  # simpan tanggal dalam format API friendly
+                })
             
             rows.append(room_data)
 
@@ -290,3 +293,50 @@ class AddOccupancyDataView(APIView):
                 {"error": f"An error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+class DeleteOccupancyView(APIView):
+    def post(self, request):
+        room_name = request.data.get("room_name")
+        date_str = request.data.get("date")
+
+        if not room_name or not date_str:
+            return Response({"error": "room_name and date are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        date = parse_date(date_str)
+        if not date:
+            return Response({"error": "Invalid date format (YYYY-MM-DD)"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 1. Cari Room berdasarkan room_name
+        room = get_object_or_404(Room, room_name=room_name)
+
+        # 2. Cari RoomRecord untuk tanggal tersebut
+        record = RoomRecord.objects.filter(room=room, date=date).first()
+        if not record:
+            return Response({"error": "No record found for this room and date"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Simpan nilai guest_status sebelum di-null-kan
+        original_status = record.guest_status
+
+        # 3. Jika "Checked Out", ubah hari sebelumnya menjadi "Checked Out"
+        if original_status == "Checked Out":
+            prev_record = RoomRecord.objects.filter(room=room, date=date - timedelta(days=1)).first()
+            if prev_record:
+                prev_record.guest_status = "Checked Out"
+                prev_record.save()
+
+        # 4. Jika "Checked In", cek besoknya apakah kosong
+        elif original_status == "Checked In":
+            next_record = RoomRecord.objects.filter(room=room, date=date + timedelta(days=1)).first()
+            if next_record and not next_record.guest_status:
+                # Tidak mengubah apapun
+                pass
+
+        # 5. Null-kan guest_status di record ini
+        record.guest_status = None
+        record.save()
+
+        return Response({
+            "message": "Guest status updated successfully",
+            "room_name": room_name,
+            "date": date_str
+        }, status=status.HTTP_200_OK)

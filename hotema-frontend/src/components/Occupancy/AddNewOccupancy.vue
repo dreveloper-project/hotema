@@ -72,7 +72,7 @@ const closeMenu = () => {
       @click.stop="addMenu = !addMenu"
       class="bg-[#46b389] py-2 px-3 rounded-md text-[#f4f4f6] text-[0.87rem] mb-2 flex items-center cursor-pointer transition-all hover:scale-105"
     >
-      Tambahkan Data
+      Tambah Okupansi
       <span class="ml-1"><IconMaterialSymbolsLightAdd class="text-[1rem]" /></span>
     </button>
 

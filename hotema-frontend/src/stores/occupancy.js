@@ -79,6 +79,29 @@ export const useOccupancyStore = defineStore('occupancy', {
       }
     },
 
+    async deleteOccupancy(roomName, date) {
+      this.loading = true
+      this.error = null
+      console.log(roomName, date)
+      try {
+        const payload = {
+          room_name: roomName,
+          date: date // format YYYY-MM-DD
+        }
+        const res = await api.post('room/delete-occupancy/', payload)
+        
+        
+
+        this.loading = false
+        return res.data
+      } catch (err) {
+        this.loading = false
+        this.error = err.response?.data?.error || 'Gagal menghapus occupancy'
+        console.log(err)
+        throw err
+      }
+    },
+
     handleError(err) {
       if (err.response) {
         this.error = err.response.data?.error || 'Terjadi kesalahan dari server.'
