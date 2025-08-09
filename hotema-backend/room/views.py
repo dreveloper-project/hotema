@@ -306,37 +306,56 @@ class DeleteOccupancyView(APIView):
         if not date:
             return Response({"error": "Invalid date format (YYYY-MM-DD)"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 1. Cari Room berdasarkan room_name
         room = get_object_or_404(Room, room_name=room_name)
-
-        # 2. Cari RoomRecord untuk tanggal tersebut
         record = RoomRecord.objects.filter(room=room, date=date).first()
         if not record:
             return Response({"error": "No record found for this room and date"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Simpan nilai guest_status sebelum di-null-kan
         original_status = record.guest_status
 
-        # 3. Jika "Checked Out", ubah hari sebelumnya menjadi "Checked Out"
+        # Mekanisme penghapusan awal
         if original_status == "Checked Out":
             prev_record = RoomRecord.objects.filter(room=room, date=date - timedelta(days=1)).first()
             if prev_record:
                 prev_record.guest_status = "Checked Out"
                 prev_record.save()
 
-        # 4. Jika "Checked In", cek besoknya apakah kosong
         elif original_status == "Checked In":
             next_record = RoomRecord.objects.filter(room=room, date=date + timedelta(days=1)).first()
             if next_record and not next_record.guest_status:
-                # Tidak mengubah apapun
                 pass
 
-        # 5. Null-kan guest_status di record ini
         record.guest_status = None
         record.save()
 
+        # -------------------
+        # POST-PROCESSING
+        # -------------------
+
+        all_records = RoomRecord.objects.filter(room=room).order_by("date")
+
+        for rec in all_records:
+            prev_rec = RoomRecord.objects.filter(room=room, date=rec.date - timedelta(days=1)).first()
+            next_rec = RoomRecord.objects.filter(room=room, date=rec.date + timedelta(days=1)).first()
+
+            # 1. "Checked Out" berdiri sendiri
+            if rec.guest_status == "Checked Out":
+                if (not prev_rec or not prev_rec.guest_status) and (not next_rec or not next_rec.guest_status):
+                    rec.guest_status = "Checked In"
+                    rec.save()
+
+            # 2. "Checked Out" dengan hari sebelumnya juga "Checked Out"
+            if rec.guest_status == "Checked Out" and prev_rec and prev_rec.guest_status == "Checked Out":
+                prev_rec.guest_status = "Checked In"
+                prev_rec.save()
+
+            # 3. "Checked In" dan besoknya null
+            if rec.guest_status == "Checked In" and next_rec and not next_rec.guest_status:
+                next_rec.guest_status = "Checked Out"
+                next_rec.save()
+
         return Response({
-            "message": "Guest status updated successfully",
+            "message": "Guest status updated successfully with post-processing",
             "room_name": room_name,
             "date": date_str
         }, status=status.HTTP_200_OK)
