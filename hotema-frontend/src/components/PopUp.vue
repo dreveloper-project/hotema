@@ -1,3 +1,4 @@
+
 <template>
   <div class="fixed font-poppins inset-0 z-50 flex items-center justify-center bg-black/60">
     <div class="bg-white rounded-2xl shadow-lg max-w-md w-full p-6 relative">
@@ -33,3 +34,5 @@ function close() {
   emit('close')
 }
 </script>
+
+

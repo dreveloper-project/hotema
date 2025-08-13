@@ -34,3 +34,47 @@ class UsersWithoutRoleView(APIView):
         serializer = UserWithoutRoleSerializer(users, many=True, context={'request': request})
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class UpdateUserRoleView(APIView):
+    permission_classes = [IsAuthenticated] 
+
+    def patch(self, request, *args, **kwargs):
+        user_id = request.data.get("user_id")
+        new_role = request.data.get("role")
+
+        # Validasi input
+        if not user_id or not new_role:
+            return Response(
+                {"error": "user_id dan role harus dikirim."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Pastikan role valid
+        allowed_roles = ["staff", "supervisor"]
+        if new_role.lower() not in allowed_roles:
+            return Response(
+                {"error": f"Role harus salah satu dari: {allowed_roles}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = CustomUser.objects.get(user_id=user_id, role__isnull=True)
+        except CustomUser.DoesNotExist:
+            return Response(
+                {"error": "User tidak ditemukan atau role sudah terisi."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Update role
+        user.role = new_role
+        user.save()
+
+        return Response(
+            {
+                "message": "Role berhasil diperbarui.",
+                "user_id": user.user_id,
+                "fullname": user.fullname,
+                "role": user.role
+            },
+            status=status.HTTP_200_OK
+        )

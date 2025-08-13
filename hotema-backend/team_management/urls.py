@@ -3,4 +3,5 @@ from . import views
 
 urlpatterns = [
     path('users-without-role/', views.UsersWithoutRoleView.as_view(), name='users-without-role'),
+    path('update-role/', views.UpdateUserRoleView.as_view(), name='update-user-role'),
 ]

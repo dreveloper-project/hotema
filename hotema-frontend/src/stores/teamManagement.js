@@ -16,7 +16,7 @@ export const useTeamManagementStore = defineStore('teamManagement', {
       try {
         const response = await api.get('team-management/users-without-role/');
         this.usersWithoutRole = response.data; // langsung simpan array user
-        console.log(response.data)
+        console.log(response.data);
       } catch (err) {
         console.error('Gagal mengambil daftar user tanpa role:', err);
         this.error = err.response?.data?.detail || 'Gagal memuat data';
@@ -24,5 +24,24 @@ export const useTeamManagementStore = defineStore('teamManagement', {
         this.loading = false;
       }
     },
+
+    async updateUserRole(userId, role) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        await api.patch('team-management/update-role/', {
+          user_id: userId,
+          role: role
+        });
+        // Refresh data setelah update
+        await this.fetchUsersWithoutRole();
+      } catch (err) {
+        console.error('Gagal memperbarui role user:', err);
+        this.error = err.response?.data?.error || 'Gagal memperbarui role';
+      } finally {
+        this.loading = false;
+      }
+    }
   },
 });
