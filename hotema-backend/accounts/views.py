@@ -17,7 +17,7 @@ class RegisterView(generics.CreateAPIView):
             serializer.save(role='admin')
         else:
            
-            serializer.save(role='staff')
+            serializer.save(role=None)
 
 class LoginView(APIView):
     permission_classes = (AllowAny,)

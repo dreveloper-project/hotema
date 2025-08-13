@@ -132,7 +132,7 @@ onBeforeUnmount(() => {
 
     <table
       v-else
-      class="shadow-md font-poppins bg-white rounded-lg text-center border border-gray-600 border-collapse"
+      class="shadow-md text-[0.84rem] font-poppins bg-white rounded-lg text-center border border-gray-600 border-collapse"
     >
       <thead>
         <tr>

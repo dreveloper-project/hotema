@@ -81,7 +81,7 @@ async function handleLogin(e) {
     >
       <img src="@/assets/logo.png" alt="Logo" class="w-[50%]" />
       <div class="pl-2">
-        <h1 class="text-2xl">Hotel Team Management ©</h1>
+        <h1 class="text-2xl">Housekeeping Team Management ©</h1>
         <h2>Aplikasi Berbasis Web Privat, Untuk Manajemen Tim Housekeeping!</h2>
       </div>
     </aside>

@@ -12,6 +12,7 @@ from datetime import timedelta
 from django.db.models import Q
 from datetime import datetime, timedelta
 from django.shortcuts import get_object_or_404
+from common.permissions import IsAdmin, IsSupervisor, IsAdminOrSupervisor
 class RoomRecordTodayView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -67,7 +68,7 @@ class RoomRecordByDateView(APIView):
         return Response(data)
 
 class RoomCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdmin]
 
     def post(self, request):
         nama_kamar = request.data.get('nama_kamar')
@@ -198,7 +199,7 @@ class GetAllRoomView(APIView):
         })
 
 class AddOccupancyDataView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdmin]
 
     def post(self, request):
         room_name = request.data.get('room_name')
@@ -295,6 +296,7 @@ class AddOccupancyDataView(APIView):
             )
 
 class DeleteOccupancyView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
     def post(self, request):
         room_name = request.data.get("room_name")
         date_str = request.data.get("date")

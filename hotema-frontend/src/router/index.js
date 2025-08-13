@@ -8,6 +8,7 @@ import AssignmentView from '@/views/AssignmentView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import AddRoomView from '@/views/Assignment/AddRoomView.vue'
+import AcceptNewTeamView from '@/views/Team/AcceptNewTeamView.vue'
 
 const routes = [
   {
@@ -16,6 +17,7 @@ const routes = [
     component: DashboardView,
     meta: {
       requiresAuth: true,
+      roles: ['admin'],
       title: 'Dasbor | Sistem Manajemen Tim Housekeeping'
     },
   },
@@ -25,7 +27,18 @@ const routes = [
     component: TeamManagementView,
     meta: {
       requiresAuth: true,
+      roles: ['admin'],
       title: 'Manajemen Tim | Sistem Manajemen Tim Housekeeping'
+    },
+  },
+  {
+    path: '/team-management/accept-new-team',
+    name: 'accept-new-team',
+    component: AcceptNewTeamView,
+    meta: {
+      requiresAuth: true,
+      roles: ['admin'],
+      title: 'Setujui Pegawai Baru | Sistem Manajemen Tim Housekeeping'
     },
   },
   {
@@ -34,6 +47,7 @@ const routes = [
     component: OccupancyManagementView,
     meta: {
       requiresAuth: true,
+      roles: ['admin'],
       title: 'Manajemen Hunian | Sistem Manajemen Tim Housekeeping'
     },
   },
@@ -43,6 +57,7 @@ const routes = [
     component: SettingsView,
     meta: {
       requiresAuth: true,
+      roles: ['admin'],
       title: 'Pengaturan | Sistem Manajemen Tim Housekeeping'
     },
   },
@@ -52,6 +67,7 @@ const routes = [
     component: AssignmentView,
     meta: {
       requiresAuth: true,
+      roles: ['admin'],
       title: 'Penugasan | Sistem Manajemen Tim Housekeeping'
     },
   },
@@ -61,6 +77,7 @@ const routes = [
     component: AddRoomView,
     meta: {
       requiresAuth: true,
+      roles: ['admin'],
       title: 'Penugasan | Tambah Data Kamar Baru'
     },
   },
