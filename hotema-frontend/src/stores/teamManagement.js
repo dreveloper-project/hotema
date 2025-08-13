@@ -4,6 +4,7 @@ import api from '@/lib/axios';
 export const useTeamManagementStore = defineStore('teamManagement', {
   state: () => ({
     usersWithoutRole: [],
+    usersByRole: [], 
     loading: false,
     error: null,
   }),
@@ -24,7 +25,22 @@ export const useTeamManagementStore = defineStore('teamManagement', {
         this.loading = false;
       }
     },
-
+     async fetchUsersByRole(role) {
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await api.get(`team-management/users-by-role/`, {
+          params: { role }
+        });
+        this.usersByRole = response.data;
+        console.log(response.data)
+      } catch (err) {
+        this.error = err.response?.data?.error || 'Gagal memuat data';
+      } finally {
+        this.loading = false;
+      }
+    },
+ 
     async updateUserRole(userId, role) {
       this.loading = true;
       this.error = null;

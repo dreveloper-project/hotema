@@ -4,25 +4,13 @@ from rest_framework import status, serializers
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from customuser.models import CustomUser
+from .serializers import UserWithoutRoleSerializer
 
 
-# Serializer untuk memastikan format data konsisten
-class UserWithoutRoleSerializer(serializers.ModelSerializer):
-    pictures = serializers.SerializerMethodField()
-
-    class Meta:
-        model = CustomUser
-        fields = ['user_id', 'username', 'fullname', 'email', 'role', 'pictures']
-
-    def get_pictures(self, obj):
-        request = self.context.get('request')
-        if obj.pictures:
-            return request.build_absolute_uri(obj.pictures.url)
-        return None
 
 
 class UsersWithoutRoleView(APIView):
-    permission_classes = [IsAuthenticated]  # hapus jika mau publik
+    permission_classes = [IsAuthenticated]  
 
     def get(self, request):
         # Ambil user yang role-nya NULL atau string kosong
@@ -78,3 +66,23 @@ class UpdateUserRoleView(APIView):
             },
             status=status.HTTP_200_OK
         )
+    
+class UsersByRoleView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        role = request.query_params.get('role')
+        allowed_roles = ["staff", "supervisor"]
+
+        if not role or role.lower() not in allowed_roles:
+            return Response(
+                {"error": f"Role harus salah satu dari: {allowed_roles}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        users = CustomUser.objects.filter(role__iexact=role).distinct()
+        serializer = UserWithoutRoleSerializer(
+            users, many=True, context={'request': request}  # ⬅ penting untuk URL foto
+        )
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
