@@ -9,6 +9,7 @@ import LoginView from '../views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import AddRoomView from '@/views/Assignment/AddRoomView.vue'
 import AcceptNewTeamView from '@/views/Team/AcceptNewTeamView.vue'
+import PersonDetail from '@/views/Team/PersonDetail.vue'
 
 const routes = [
   {
@@ -39,6 +40,16 @@ const routes = [
       requiresAuth: true,
       roles: ['admin'],
       title: 'Setujui Pegawai Baru | Sistem Manajemen Tim Housekeeping'
+    },
+  },
+  {
+    path: '/team-management/user/detail/:id',
+    name: 'user-detail',
+    component: PersonDetail,
+    meta: {
+      requiresAuth: true,
+      roles: ['admin'],
+      title: 'Detail Pegawai | Sistem Manajemen Tim Housekeeping'
     },
   },
   {

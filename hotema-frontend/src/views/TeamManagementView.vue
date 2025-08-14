@@ -2,6 +2,9 @@
 import Sidebar from '../components/Sidebar.vue'
 import { ref, watch, onMounted } from 'vue';
 import { useTeamManagementStore } from '@/stores/teamManagement';
+import { useRouter } from 'vue-router'; 
+
+const router = useRouter();
 
 const selectedRole = ref('staff');
 const store = useTeamManagementStore();
@@ -16,8 +19,9 @@ watch(selectedRole, (newRole) => {
   store.fetchUsersByRole(newRole);
 });
 
-function showDetail(person) {
-  alert(`Detail untuk ${person.fullname}`);
+// Fungsi detail
+function showDetail(id) {
+  router.push(`/team-management/user/detail/${id}`); 
 }
 </script>
 
@@ -58,17 +62,17 @@ function showDetail(person) {
       <div class="overflow-x-auto">
         <table class="w-full border-collapse">
           <thead>
-            <tr class="bg-gray-100 text-gray-700">
+            <tr class="bg-gray-100 text-gray-700 text-center">
               <th class="text-left px-4 py-2">Nama Lengkap</th>
               <th class="text-left px-4 py-2">Posisi</th>
-              <th class="px-4 py-2 text-center">Aksi</th>
+              <th class="px-4 py-2 ">Aksi</th>
             </tr>
           </thead>
           <tbody>
             <tr
               v-for="(person, index) in store.usersByRole || []"
               :key="index"
-              class="border-b hover:bg-gray-50"
+              class="border-b hover:bg-gray-50 "
             >
               <!-- Foto + Nama -->
               <td class="px-4 py-2 flex items-center gap-3">
@@ -99,8 +103,8 @@ function showDetail(person) {
               <!-- Tombol -->
               <td class="px-4 py-2 text-center">
                 <button
-                  class="bg-blue-500 text-white px-4 py-1 rounded-lg hover:bg-blue-600 transition"
-                  @click="showDetail(person)"
+                  class="bg-blue-500 text-white px-4 py-1 rounded-sm cursor-pointer hover:bg-blue-600 transition"
+                  @click="showDetail(person.user_id)"
                 >
                   Detail
                 </button>

@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from customuser.models import CustomUser
 from .serializers import UserWithoutRoleSerializer
-
+import os
 
 
 
@@ -86,3 +86,88 @@ class UsersByRoleView(APIView):
         )
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class UserDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        try:
+            user = CustomUser.objects.get(user_id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response(
+                {"error": "User tidak ditemukan."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = UserWithoutRoleSerializer(
+            user, context={'request': request}
+        )
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class DeleteUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, user_id):
+        try:
+            user = CustomUser.objects.get(user_id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response(
+                {"error": "User tidak ditemukan."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Hapus file profile_pictures jika ada
+        if user.pictures and user.pictures.path:
+            if os.path.isfile(user.pictures.path):
+                os.remove(user.pictures.path)
+
+        # Baru hapus user di DB
+        user.delete()
+
+        return Response(
+            {"message": f"User dengan ID {user_id} berhasil dihapus beserta profile picture."},
+            status=status.HTTP_204_NO_CONTENT
+        )
+
+
+class UpdateUserRoleByIdView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, user_id, *args, **kwargs):
+        new_role = request.data.get("role")
+
+        # Validasi input
+        if not new_role:
+            return Response(
+                {"error": "Field 'role' harus dikirim."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        allowed_roles = ["staff", "supervisor"]
+        if new_role.lower() not in allowed_roles:
+            return Response(
+                {"error": f"Role harus salah satu dari: {allowed_roles}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = CustomUser.objects.get(user_id=user_id)
+        except CustomUser.DoesNotExist:
+            return Response(
+                {"error": "User tidak ditemukan."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Update role
+        user.role = new_role
+        user.save()
+
+        return Response(
+            {
+                "message": "Role user berhasil diperbarui.",
+                "user_id": user.user_id,
+                "fullname": user.fullname,
+                "role": user.role
+            },
+            status=status.HTTP_200_OK
+        )
