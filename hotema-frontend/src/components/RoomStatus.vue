@@ -14,7 +14,7 @@ const rooms = computed(() =>
   props.records.map(record => ({
     room_name: record.room_name,
     cleanlines_status: record.cleanliness_status,
-    occuppation_status: record.guest_status,
+    occuppation_status: record.guest_status ?? 'Vacant',
   }))
 )
 </script>

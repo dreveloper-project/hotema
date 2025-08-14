@@ -13,27 +13,57 @@ from django.db.models import Q
 from datetime import datetime, timedelta
 from django.shortcuts import get_object_or_404
 from common.permissions import IsAdmin, IsSupervisor, IsAdminOrSupervisor
+
+def ensure_room_records(date_obj):
+    """
+    Pastikan semua room punya RoomRecord di tanggal tertentu.
+    Kalau tidak ada, generate sesuai aturan:
+    - guest_status = None
+    - cleanliness_status = ambil dari hari sebelumnya, kalau tidak ada → 'Dirty'
+    """
+    all_rooms = Room.objects.all()
+
+    for room in all_rooms:
+        exists = RoomRecord.objects.filter(room=room, date=date_obj).exists()
+        if not exists:
+            # cari record hari sebelumnya
+            prev_record = RoomRecord.objects.filter(
+                room=room, date__lt=date_obj
+            ).order_by("-date").first()
+
+            cleanliness_status = prev_record.cleanliness_status if prev_record else "Dirty"
+
+            RoomRecord.objects.create(
+                room=room,
+                date=date_obj,
+                guest_status=None,
+                cleanliness_status=cleanliness_status
+            )
+
+
 class RoomRecordTodayView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         today = timezone.now().date()
+
+        # generate missing room records untuk hari ini
+        ensure_room_records(today)
+
         room_records = RoomRecord.objects.filter(date=today)
         
-        # Serialize the data
-        data = []
-        for record in room_records:
-            data.append({
+        data = [
+            {
                 'rr_id': record.rr_id,
                 'room_id': record.room.room_id,
                 'room_name': record.room.room_name,
                 'guest_status': record.guest_status,
                 'cleanliness_status': record.cleanliness_status,
                 'date': record.date
-            })
-        
+            }
+            for record in room_records
+        ]
         return Response(data)
-    
 
 
 class RoomRecordByDateView(APIView):
@@ -41,7 +71,6 @@ class RoomRecordByDateView(APIView):
 
     def get(self, request):
         date_str = request.query_params.get('date')
-        print(date_str)
         if not date_str:
             return Response({"error": "Parameter 'date' wajib diisi (format: YYYY-MM-DD)."}, status=400)
 
@@ -49,22 +78,29 @@ class RoomRecordByDateView(APIView):
         if not date_obj:
             return Response({"error": "Format tanggal tidak valid. Gunakan YYYY-MM-DD."}, status=400)
 
+        today = timezone.now().date()
+        yesterday = today - timedelta(days=1)
+
+        # ✅ Generate missing hanya kalau bukan hari kemarin
+        if date_obj != yesterday:
+            ensure_room_records(date_obj)
+
         room_records = RoomRecord.objects.filter(date=date_obj)
 
         if not room_records.exists():
             return Response({"error": "Data tidak ditemukan pada tanggal tersebut."}, status=404)
 
-        data = []
-        for record in room_records:
-            data.append({
+        data = [
+            {
                 'rr_id': record.rr_id,
                 'room_id': record.room.room_id,
                 'room_name': record.room.room_name,
                 'guest_status': record.guest_status,
                 'cleanliness_status': record.cleanliness_status,
                 'date': record.date
-            })
-
+            }
+            for record in room_records
+        ]
         return Response(data)
 
 class RoomCreateView(APIView):
