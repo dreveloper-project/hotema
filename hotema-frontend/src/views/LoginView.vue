@@ -42,21 +42,44 @@ watch(
     }
   }
 )
-
+ 
 async function handleLogin(e) {
   e.preventDefault()
   const success = await auth.login({
     username: username.value,
     password: password.value,
   })
+
   if (success) {
-     router.push({ name: 'home' }) // Ganti dengan route tujuan setelah login
+    const role = auth.user?.role
+
+    if (!role) {
+      // Role null → logout, tetap di halaman login, munculkan PopUp
+      auth.logout()
+      message.value = 'Akun ini belum disetujui. Silakan login ulang atau hubungi admin.'
+      isOpen.value = true
+      return
+    }
+
+    if (role === 'admin') {
+      router.push({ name: 'home' })
+    } else if (role === 'staff') {
+      router.push({ name: 'staff-dashboard' })
+    } else if (role === 'supervisor') {
+      router.push({ name: 'spv-dashboard' })
+    } else {
+      // fallback role tidak dikenali
+      auth.logout()
+      message.value = 'Login gagal: role tidak dikenali.'
+      isOpen.value = true
+    }
   } else {
     message.value =
       auth.error?.error || auth.error?.detail || 'Login gagal. Cek username/password.'
     isOpen.value = true
   }
 }
+
 </script>
 
 <template>
@@ -64,12 +87,7 @@ async function handleLogin(e) {
   <PopUp v-if="isOpen" @close="isOpen = false" class="font-poppins">
     <h2 class="text-xl font-semibold mb-4">Pesan</h2>
     <p class="mb-4">{{ message }}</p>
-    <button
-      @click="isOpen = false"
-      class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-    >
-      Tutup
-    </button>
+    
   </PopUp>
 
   <!-- HALAMAN LOGIN -->

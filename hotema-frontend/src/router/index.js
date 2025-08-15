@@ -10,7 +10,8 @@ import RegisterView from '@/views/RegisterView.vue'
 import AddRoomView from '@/views/Assignment/AddRoomView.vue'
 import AcceptNewTeamView from '@/views/Team/AcceptNewTeamView.vue'
 import PersonDetail from '@/views/Team/PersonDetail.vue'
-
+import StaffDashboardView from '@/views/Mobile/StaffDashboardView.vue'
+import SpvDashboardView from '@/views/Mobile/SpvDashboardView.vue'
 const routes = [
   {
     path: '/',
@@ -115,7 +116,26 @@ const routes = [
     meta: {
       title: 'Masuk | Sistem Manajemen Tim Housekeeping'
     },
-  }
+  },
+
+  // Mobile user
+  {
+    path: '/staff/dashboard',
+    name: 'staff-dashboard',
+    component: StaffDashboardView,
+    meta: {
+      title: 'Dashboard Staff | Sistem Manajemen Tim Housekeeping'
+    },
+  },
+  {
+    path: '/spv/dashboard',
+    name: 'spv-dashboard',
+    component: SpvDashboardView,
+    meta: {
+      title: 'Dashboard Supervisor | Sistem Manajemen Tim Housekeeping'
+    },
+  },
+
 ]
 
 const router = createRouter({
