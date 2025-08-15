@@ -12,6 +12,8 @@ import AcceptNewTeamView from '@/views/Team/AcceptNewTeamView.vue'
 import PersonDetail from '@/views/Team/PersonDetail.vue'
 import StaffDashboardView from '@/views/Mobile/StaffDashboardView.vue'
 import SpvDashboardView from '@/views/Mobile/SpvDashboardView.vue'
+import StaffTaskView from '@/views/Mobile/StaffTaskView.vue'
+import SpvTaskView from '@/views/Mobile/SpvTaskView.vue'
 const routes = [
   {
     path: '/',
@@ -124,7 +126,19 @@ const routes = [
     name: 'staff-dashboard',
     component: StaffDashboardView,
     meta: {
-      title: 'Dashboard Staff | Sistem Manajemen Tim Housekeeping'
+      title: 'Dashboard Staff | Sistem Manajemen Tim Housekeeping',
+      requiresAuth: true,
+      roles: ['staff'],
+    },
+  },
+   {
+    path: '/staff/task',
+    name: 'staff-task',
+    component: StaffTaskView,
+    meta: {
+      title: 'Daftar Pekerjaan Hari Ini | Sistem Manajemen Tim Housekeeping',
+      requiresAuth: true,
+      roles: ['staff'],
     },
   },
   {
@@ -132,7 +146,19 @@ const routes = [
     name: 'spv-dashboard',
     component: SpvDashboardView,
     meta: {
-      title: 'Dashboard Supervisor | Sistem Manajemen Tim Housekeeping'
+      title: 'Dashboard Supervisor | Sistem Manajemen Tim Housekeeping',
+      requiresAuth: true,
+      roles: ['supervisor'],
+    },
+  },
+  {
+    path: '/spv/task-monitoring',
+    name: 'spv-monitoring',
+    component: SpvTaskView,
+    meta: {
+      title: 'Daftar Pekerjaan Hari Ini | Sistem Manajemen Tim Housekeeping',
+      requiresAuth: true,
+      roles: ['supervisor'],
     },
   },
 
