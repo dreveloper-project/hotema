@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'customuser',
     'room',
+    'team_management',
+    'presence',
 ]
 
 REST_FRAMEWORK = {

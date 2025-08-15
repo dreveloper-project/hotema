@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/accounts/', include('accounts.urls')),
     path('api/room/', include('room.urls')),
     path('api/team-management/', include('team_management.urls')),
+    path('api/presence/', include('presence.urls')),
 ]
 
 if settings.DEBUG:

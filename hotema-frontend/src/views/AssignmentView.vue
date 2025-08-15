@@ -35,13 +35,13 @@ watch(currentDate, (newDate) => {
   <button
     @click="navigate"
     :class="[
-      'bg-[#46b389] py-2 px-3 rounded-md ml-[14rem] text-[#f4f4f6] text-[0.87rem] mb-2 flex items-center cursor-pointer transition-all hover:scale-105',
+      'bg-[#46b355] py-2 px-2 rounded-md ml-[14rem] text-[#f4f4f6] text-[0.87rem] font-light mb-2 flex items-center cursor-pointer transition-all hover:scale-105',
       isActive ? 'ring-2 ring-white' : ''
     ]"
   >
-    Tambahkan Data
+    Tambahkan Kamar
     <span class="ml-1">
-      <IconMaterialSymbolsLightAdd class="text-[1rem]" />
+      <IconMaterialSymbolsLightAdd class="" />
     </span>
   </button>
 </RouterLink>
