@@ -23,6 +23,9 @@ watch(selectedRole, (newRole) => {
 function showDetail(id) {
   router.push(`/team-management/user/detail/${id}`); 
 }
+function setPresence(id) {
+  router.push(`/team-management/set-presence/${id}`); 
+}
 </script>
 
 <template>
@@ -31,12 +34,7 @@ function showDetail(id) {
     class="bg-[#f4f4f6] min-w-[calc(21.145vw-98vw)] pl-[2rem] ml-[20.145vw] py-[calc(1.43*1.6rem)] min-h-screen h-auto relative font-poppins"
   >
     <div class="flex justify-end w-[97%] gap-2">
-      <button
-        class="bg-[#46b389] py-2 px-3 rounded-md text-[#f4f4f6] text-[0.87rem] mb-2 flex items-center cursor-pointer transition-all hover:scale-105"
-      >
-        Set Absensi
-        <span class="ml-1"><IconMaterialSymbolsLightAdd class="text-[1rem]" /></span>
-      </button>
+      
       <RouterLink to="/team-management/accept-new-team" v-slot="{ navigate }">
         <button
           @click="navigate"
@@ -101,12 +99,18 @@ function showDetail(id) {
               <td class="px-4 py-2">{{ person.role }}</td>
 
               <!-- Tombol -->
-              <td class="px-4 py-2 text-center">
+              <td class="px-4 py-2 text-center ">
                 <button
-                  class="bg-blue-500 text-white px-4 py-1 rounded-sm cursor-pointer hover:bg-blue-600 transition"
+                  class="bg-[#258bff] text-white px-4 py-1 inline rounded-sm cursor-pointer hover:bg-blue-600 transition"
                   @click="showDetail(person.user_id)"
                 >
-                  Detail
+                  Detail 
+                </button>
+                <button
+                  class="bg-[#a223ad] ml-2 text-white px-4 py-1 rounded-sm cursor-pointer hover:bg-[#e13bf0] transition inline"
+                  @click="setPresence(person.user_id)"
+                >
+                  Set Absensi 
                 </button>
               </td>
             </tr>

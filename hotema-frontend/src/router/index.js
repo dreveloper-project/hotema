@@ -14,6 +14,7 @@ import StaffDashboardView from '@/views/Mobile/StaffDashboardView.vue'
 import SpvDashboardView from '@/views/Mobile/SpvDashboardView.vue'
 import StaffTaskView from '@/views/Mobile/StaffTaskView.vue'
 import SpvTaskView from '@/views/Mobile/SpvTaskView.vue'
+import SetPresenceView from '@/views/Team/SetPresenceView.vue'
 const routes = [
   {
     path: '/',
@@ -53,6 +54,17 @@ const routes = [
       requiresAuth: true,
       roles: ['admin'],
       title: 'Detail Pegawai | Sistem Manajemen Tim Housekeeping'
+    },
+  },
+  {
+    path: '/team-management/set-presence/:id',
+    name: 'set-presence',
+    component: SetPresenceView,
+    meta: {
+      requiresAuth: true,
+      roles: ['admin'],
+      title: 'Buat & Ubah Jadwal | Sistem Manajemen Tim Housekeeping'
+      
     },
   },
   {
@@ -161,6 +173,8 @@ const routes = [
       roles: ['supervisor'],
     },
   },
+
+  
 
 ]
 
