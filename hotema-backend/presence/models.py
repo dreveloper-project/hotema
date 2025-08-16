@@ -21,7 +21,9 @@ class Schedule(models.Model):
     schedule_date = models.DateField()
     shift = models.ForeignKey(
         Shift,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
     )
 
     def __str__(self):

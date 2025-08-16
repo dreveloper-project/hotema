@@ -1,4 +1,5 @@
 # presence/api_views.py
+from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -8,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from calendar import monthrange
 from datetime import date
 
-from .models import Shift, Schedule
+from .models import Shift, Schedule, PresenceRecord
 
 User = get_user_model()
 
@@ -40,95 +41,97 @@ class ShiftUpdateView(APIView):
             status=status.HTTP_200_OK
         )
 
-
-class PresenceView(APIView):
+class UserScheduleByMonthView(APIView):
     """
-    Ambil semua schedule user dalam bulan tertentu.
-    Output: { 1: "Shift Pagi", 2: "Libur", ... }
-    """
-    permission_classes = [IsAuthenticated]
+    Endpoint menerima POST dengan body:
+    {
+      "user_id": 2,
+      "month": 8,
+      "year": 2025
+    }
 
-    def get(self, request, user_id):
-        try:
-            month = int(request.GET.get("month"))
-            year = int(request.GET.get("year"))
-        except (TypeError, ValueError):
-            return Response({"error": "month dan year wajib dikirim"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Hitung jumlah hari dalam bulan
-        days_in_month = monthrange(year, month)[1]
-
-        # Ambil semua schedule user di bulan tersebut
-        schedules = Schedule.objects.filter(
-            user_id=user_id,
-            schedule_date__year=year,
-            schedule_date__month=month
-        ).select_related("shift")
-
-        # Buat mapping {day: shift_name}
-        schedule_map = {s.schedule_date.day: s.shift.shift_name for s in schedules}
-
-        # Isi semua hari dengan shift/libur
-        data = {}
-        for day in range(1, days_in_month + 1):
-            data[day] = schedule_map.get(day, "Libur")
-
-        return Response(data, status=status.HTTP_200_OK)
-
-class SetScheduleView(APIView):
-    """
-    Set atau update shift untuk user pada tanggal tertentu.
-    Input: { "user_id": 1, "day": 3, "month": 8, "year": 2025, "shift": "Shift Pagi" }
+    Response:
+    {
+      "date": ["2025-08-01", "2025-08-02", ...],
+      "infobydate": ["Shift Pagi", "Libur", ...]
+    }
     """
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        try:
-            user_id = int(request.data.get("user_id"))
-            day = int(request.data.get("day"))
-            month = int(request.data.get("month"))
-            year = int(request.data.get("year"))
-            shift_name = request.data.get("shift")
-        except (TypeError, ValueError):
-            return Response({"error": "user_id, day, month, year, dan shift wajib diisi"}, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, *args, **kwargs):
+        user_id = request.data.get("user_id")
+        month = request.data.get("month")
+        year = request.data.get("year")
 
+        if not (user_id and month and year):
+            return Response(
+                {"error": "user_id, month, and year are required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # pastikan user ada
         user = get_object_or_404(User, pk=user_id)
-        shift = get_object_or_404(Shift, shift_name=shift_name)
 
-        schedule_date = date(year, month, day)
+        try:
+            month = int(month)
+            year = int(year)
+        except ValueError:
+            return Response(
+                {"error": "month and year must be integers"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        schedule, created = Schedule.objects.update_or_create(
-            user=user,
-            schedule_date=schedule_date,
-            defaults={"shift": shift}
-        )
+        # cari jumlah hari dalam bulan
+        _, last_day = monthrange(year, month)
+
+        dates = []
+        info_by_date = []
+
+        for day in range(1, last_day + 1):
+            current_date = date(year, month, day)
+            dates.append(current_date.isoformat())
+
+            # cek schedule user
+            schedule = Schedule.objects.filter(user=user, schedule_date=current_date).first()
+            if schedule:
+                if schedule.shift:  # ada shift
+                    info_by_date.append(schedule.shift.shift_name)
+                else:  # shift null → libur
+                    info_by_date.append("Libur")
+            else:
+                info_by_date.append("Libur")
 
         return Response(
-            {"message": "Schedule saved", "day": day, "shift": shift.shift_name},
+            {
+                "date": dates,
+                "infobydate": info_by_date
+            },
             status=status.HTTP_200_OK
         )
 
-
-class DeleteScheduleView(APIView):
-    """
-    Hapus shift pada tanggal tertentu → otomatis jadi Libur di frontend.
-    Input: { "user_id": 1, "day": 3, "month": 8, "year": 2025 }
-    """
-    permission_classes = [IsAuthenticated]
-
+class SetShiftView(APIView):
     def post(self, request):
-        try:
-            user_id = int(request.data.get("user_id"))
-            day = int(request.data.get("day"))
-            month = int(request.data.get("month"))
-            year = int(request.data.get("year"))
-        except (TypeError, ValueError):
-            return Response({"error": "user_id, day, month, year wajib diisi"}, status=status.HTTP_400_BAD_REQUEST)
+        user_id = request.data.get("user_id")
+        date_str = request.data.get("date")
+        shift_id = request.data.get("shift_id")
 
-        schedule_date = date(year, month, day)
-        schedule = Schedule.objects.filter(user_id=user_id, schedule_date=schedule_date)
+        user = get_object_or_404(User, user_id=user_id)
+        date_obj = date.fromisoformat(date_str)
 
-        if schedule.exists():
-            schedule.delete()
-            return Response({"message": "Schedule deleted, now Libur"}, status=status.HTTP_200_OK)
-        return Response({"message": "No schedule found for this date"}, status=status.HTTP_404_NOT_FOUND)
+        # kalau "libur" → jadikan None
+        if shift_id == "libur" or shift_id is None:
+            shift = None
+        else:
+            shift = get_object_or_404(Shift, shift_id=shift_id)
+
+        schedule, created = Schedule.objects.update_or_create(
+            user=user,
+            schedule_date=date_obj,
+            defaults={"shift": shift},
+        )
+
+        return Response(
+            {"message": "Shift updated successfully", "libur": shift is None},
+            status=status.HTTP_200_OK,
+        )
+

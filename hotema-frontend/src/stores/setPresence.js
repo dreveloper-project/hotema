@@ -1,73 +1,58 @@
-// stores/attendance.js
+// stores/setPresence.js
 import { defineStore } from 'pinia'
 import api from '@/lib/axios'
 
-export const useSetPresence = defineStore('setPresence', {
+export const useSetPresenceStore = defineStore('setPresence', {
   state: () => ({
-    infoByDate: {},   // { 1: "Shift Pagi", 2: "Libur", ... }
+    dates: [],       // <-- array tanggal dari backend
+    infoByDate: [],  // <-- isi shift atau "Libur"
     loading: false,
     error: null,
   }),
 
   actions: {
-    async fetchAttendance(userId, month, year) {
+    async fetchPresence(userId, month, year) {
       this.loading = true
       this.error = null
 
       try {
-        const res = await api.get(`presence/${userId}/`, {
-          params: { month, year }
+        const response = await api.post('presence/user-schedule/', {
+          user_id: userId,
+          month: month,
+          year: year
         })
 
-        // Pastikan respons berupa object (misalnya { 1: "Shift Pagi", 2: "Libur" })
-        if (res.data && typeof res.data === 'object') {
-          this.infoByDate = res.data
+        const data = response.data
+
+        if (data && Array.isArray(data.date) && Array.isArray(data.infobydate)) {
+          this.dates = data.date
+          this.infoByDate = data.infobydate
         } else {
-          this.infoByDate = {}
+          this.dates = []
+          this.infoByDate = []
           this.error = 'Format data tidak valid'
         }
       } catch (err) {
         this.handleError(err)
-        this.infoByDate = {}
+        this.dates = []
+        this.infoByDate = []
       } finally {
         this.loading = false
       }
     },
-
-    async setAttendance(userId, day, month, year, shiftType) {
+    async setShift(userId, date, shiftId) {
       this.loading = true
       this.error = null
-
       try {
-        const payload = { user_id: userId, day, month, year, shift: shiftType }
-        const res = await api.post(`presence/set/`, payload)
-
-        // Update state lokal supaya langsung kelihatan
-        this.infoByDate[day] = shiftType
-        return res.data
-      } catch (err) {
-        this.handleError(err)
-        throw err
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async deleteAttendance(userId, day, month, year) {
-      this.loading = true
-      this.error = null
-
-      try {
-        const res = await api.post(`presence/delete/`, {
+        const response = await api.post('presence/set-shift/', {
           user_id: userId,
-          day,
-          month,
-          year
+          date: date,
+          shift_id: shiftId
         })
-
-        // Update state lokal → biar jadi "Libur"
-        this.infoByDate[day] = "Libur"
-        return res.data
+        // Setelah update, refresh data bulan yang sama
+        const d = new Date(date)
+        await this.fetchPresence(userId, d.getMonth() + 1, d.getFullYear())
+        return response.data
       } catch (err) {
         this.handleError(err)
         throw err
