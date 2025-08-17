@@ -15,6 +15,8 @@ import SpvDashboardView from '@/views/Mobile/SpvDashboardView.vue'
 import StaffTaskView from '@/views/Mobile/StaffTaskView.vue'
 import SpvTaskView from '@/views/Mobile/SpvTaskView.vue'
 import SetPresenceView from '@/views/Team/SetPresenceView.vue'
+import TaskLogView from '@/views/Assignment/TaskLogView.vue'
+import CreateAssignment from '@/views/Assignment/CreateAssignment.vue'
 const routes = [
   {
     path: '/',
@@ -95,6 +97,26 @@ const routes = [
       requiresAuth: true,
       roles: ['admin'],
       title: 'Penugasan | Sistem Manajemen Tim Housekeeping'
+    },
+  },
+  {
+    path: '/create-assignment',
+    name: 'create-assignment',
+    component: CreateAssignment,
+    meta: {
+      requiresAuth: true,
+      roles: ['admin'],
+      title: 'Tugaskan Seorang Staff | Sistem Manajemen Tim Housekeeping'
+    },
+  },
+  {
+    path: '/task-log',
+    name: 'task-log',
+    component: TaskLogView,
+    meta: {
+      requiresAuth: true,
+      roles: ['admin'],
+      title: 'Log Tugas | Sistem Manajemen Tim Housekeeping'
     },
   },
   {

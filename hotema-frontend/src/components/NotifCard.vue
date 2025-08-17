@@ -1,78 +1,126 @@
-
-<script setup>
-
-import { ref } from 'vue';
-
-const notifVisibility = ref(true)
-
-const props = defineProps({
-  notifType: String,
-  notifMessage: String
-})
-</script>
-
-
 <template>
+  <main class="flex justify-center items-center gap-4 p-5 font-poppins bg-[#f4f4f6] w-[100vw] h-[100vh]">
+    <div class="bg-white rounded-lg shadow-md px-6 py-8 w-[350px]">
+      <h1 class="text-center font-bold mt-4">Tugaskan Staff !</h1>
 
-    <div class="notif-card font-poppins transition-all duration-150" :class="props.notifType" v-if="notifVisibility" >
-    <div class="flex gap-3 self-start">
-        <div class="flex items-center justify-center  ">
-            <span class=" bg-neutral-100 rounded-lg shadow-sm">
+      <!-- Notif -->
+      <NotifCard 
+        v-if="notifMessage" 
+        :notifType="notifType" 
+        :notifMessage="notifMessage" 
+      />
 
-                <IconIcOutlineInfo v-if="props.notifType == 'info'" class="notif-icon" />
-                <IconIcBaselineLibraryAddCheck v-if="props.notifType == 'success'" class="notif-icon" />
-                <IconIcRoundWarning v-if="props.notifType == 'warning'" class="notif-icon" />
-                <IconIcBaselineBugReport v-if="props.notifType == 'error'" class="notif-icon" />
+      <!-- Date Picker -->
+      <div class="mt-4">
+        <label class="block mb-1 text-sm font-medium">Tanggal</label>
+        <DatePicker 
+          v-model="selectedDate" 
+          dateFormat="yy-mm-dd" 
+          showIcon 
+          class="w-full" 
+        />
+      </div>
 
-            </span>
-        </div>
-        <div class="flex flex-col gap-1">
-            <h3>{{ props.notifType.toLocaleUpperCase() }}</h3>
-            <p>{{ props.notifMessage }}</p>
-        </div>
+      <!-- Option Nama Kamar -->
+      <div class="mt-4">
+        <label class="block mb-1 text-sm font-medium">Nama Kamar</label>
+        <Dropdown 
+          v-model="selectedRoom" 
+          :options="roomOptions" 
+          optionLabel="label" 
+          optionValue="value" 
+          placeholder="Pilih kamar" 
+          class="w-full"
+          :disabled="!roomOptions.length"
+        />
+      </div>
+
+      <!-- Option Nama Orang -->
+      <div class="mt-4">
+        <label class="block mb-1 text-sm font-medium">Nama Orang</label>
+        <Dropdown 
+          v-model="selectedPerson" 
+          :options="staffOptions" 
+          optionLabel="label" 
+          optionValue="value" 
+          placeholder="Pilih orang" 
+          class="w-full"
+          :disabled="!staffOptions.length"
+        />
+      </div>
+
+      <!-- Tombol Simpan -->
+      <Button 
+        label="Tugaskan" 
+        class="w-full bg-blue-500 text-white mt-4 hover:bg-blue-600 rounded-lg" 
+        @click="saveData"
+        :disabled="!selectedRoom || !selectedPerson"
+      />
     </div>
-         <div class="flex items-center justify-center ">
-            <IconIcSharpClose @click="notifVisibility = false" class=" text-2xl hover:scale-150 cursor-pointer transition-all duration-150 " />
-         </div>
-    </div>
-
+  </main>
 </template>
 
+<script setup>
+import { ref, watch } from 'vue'
+import DatePicker from 'primevue/datepicker'
+import Dropdown from 'primevue/dropdown'
+import Button from 'primevue/button'
 
-<style scoped>
-@reference "tailwindcss";
+// Import store dan notif
+import { useAssignmentStore } from '@/stores/assignment'
+import NotifCard from '@/components/NotifCard.vue'
 
-.notif-card {
-    @apply hover:scale-105 transition-all duration-75  p-2 py-2 w-[42vw] border border-solid flex justify-between min-h-[4vh] text-white rounded-lg shadow-md my-5 gap-3;
+const assignmentStore = useAssignmentStore()
+
+// State
+const selectedDate = ref(null)
+const selectedRoom = ref(null)
+const selectedPerson = ref(null)
+
+const roomOptions = ref([])
+const staffOptions = ref([])
+
+const notifMessage = ref(null)
+const notifType = ref(null)
+
+// Watch date → fetch data setiap kali date berubah
+watch(selectedDate, async (newDate) => {
+  if (newDate) {
+    await assignmentStore.fetchStaffByDate(newDate)
+
+    if (assignmentStore.message) {
+      notifMessage.value = assignmentStore.message
+      notifType.value = 'warning'
+
+      // kosongkan dropdown
+      roomOptions.value = []
+      staffOptions.value = []
+      selectedRoom.value = null
+      selectedPerson.value = null
+    } else {
+      notifMessage.value = null
+      notifType.value = null
+
+      // Mapping rooms → option
+      roomOptions.value = assignmentStore.rooms.map(r => ({
+        label: r.room_name,
+        value: r.room_id
+      }))
+      // Mapping staff → option
+      staffOptions.value = assignmentStore.staff.map(s => ({
+        label: s.full_name,
+        value: s.user_id
+      }))
+    }
+  }
+})
+
+// Simpan handler sementara
+const saveData = () => {
+  console.log({
+    tanggal: selectedDate.value,
+    kamar: selectedRoom.value,
+    orang: selectedPerson.value
+  })
 }
-.notif-icon {
-    @apply text-[1.4rem] p-1;
-}
-.notif-card h3 {
-    @apply text-[0.97rem] font-bold ;
-}
-
-.notif-card p {
-    @apply text-[0.69rem]  ;
-}
-
-.error {
-    @apply text-[#ff3300] border-[#ff3300] ;
-}
-
-.warning {
-    @apply text-[#1d1c1c]  border-[#ffd519]   bg-[#ffd519];
-}
-
-
-.success {
-    @apply bg-gradient-to-r from-[#99ffe5] border-[#99ffe5] to-[#d6faf4] text-[#027558];
-}
-
-
-
-.info {
-    @apply bg-gradient-to-r from-[#d1f6f8] to-[#ecfffd] text-[#32aec4];
-}
-
-</style>
+</script>

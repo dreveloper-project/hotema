@@ -13,25 +13,47 @@ from django.db.models import Q
 from datetime import datetime, timedelta
 from django.shortcuts import get_object_or_404
 from common.permissions import IsAdmin, IsSupervisor, IsAdminOrSupervisor
+from service.models import Record, TaskMonitoring
+from service.models import Record
+from presence.models import Schedule
+from customuser.models import CustomUser
 
 def ensure_room_records(date_obj):
     """
     Pastikan semua room punya RoomRecord di tanggal tertentu.
-    Kalau tidak ada, generate sesuai aturan:
     - guest_status = None
-    - cleanliness_status = ambil dari hari sebelumnya, kalau tidak ada → 'Dirty'
+    - cleanliness_status aturan:
+        1. Jika ada Record dengan start ada dan complete kosong → 'In Cleaning - {username}'
+        2. Jika tidak ada → ambil dari RoomRecord hari sebelumnya
+        3. Jika tidak ada juga → 'Dirty'
     """
     all_rooms = Room.objects.all()
 
     for room in all_rooms:
         exists = RoomRecord.objects.filter(room=room, date=date_obj).exists()
         if not exists:
-            # cari record hari sebelumnya
-            prev_record = RoomRecord.objects.filter(
-                room=room, date__lt=date_obj
-            ).order_by("-date").first()
 
-            cleanliness_status = prev_record.cleanliness_status if prev_record else "Dirty"
+            # ✅ cek apakah ada cleaning aktif di service.Record
+            active_record = (
+                Record.objects.filter(
+                    room=room,
+                    date=date_obj,
+                    record_complete__isnull=True  # cleaning belum selesai
+                )
+                .select_related("user")
+                .first()
+            )
+
+            if active_record:
+                cleanliness_status = f"In Cleaning - {active_record.user.fullname if hasattr(active_record.user, 'fullname') else active_record.user.username}"
+            else:
+                # ✅ fallback ambil dari RoomRecord sebelumnya
+                prev_record = (
+                    RoomRecord.objects.filter(room=room, date__lt=date_obj)
+                    .order_by("-date")
+                    .first()
+                )
+                cleanliness_status = prev_record.cleanliness_status if prev_record else "Dirty"
 
             RoomRecord.objects.create(
                 room=room,
@@ -39,15 +61,13 @@ def ensure_room_records(date_obj):
                 guest_status=None,
                 cleanliness_status=cleanliness_status
             )
-
-
 class RoomRecordTodayView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         today = timezone.now().date()
 
-        # generate missing room records untuk hari ini
+        # generate data hilang untuk room records untuk hari ini
         ensure_room_records(today)
 
         room_records = RoomRecord.objects.filter(date=today)
@@ -233,7 +253,6 @@ class GetAllRoomView(APIView):
         return Response({
             'rooms': room_names
         })
-
 class AddOccupancyDataView(APIView):
     permission_classes = [IsAuthenticated, IsAdmin]
 
@@ -249,7 +268,6 @@ class AddOccupancyDataView(APIView):
             )
         
         try:
-            # Parse dates dan majukan 1 hari
             check_in = datetime.strptime(check_in_date, '%Y-%m-%d').date() + timedelta(days=1)
             check_out = datetime.strptime(check_out_date, '%Y-%m-%d').date() + timedelta(days=1)
             
@@ -259,7 +277,6 @@ class AddOccupancyDataView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Ambil room berdasarkan nama
             try:
                 room = Room.objects.get(room_name=room_name)
             except Room.DoesNotExist:
@@ -313,11 +330,41 @@ class AddOccupancyDataView(APIView):
                 'guest_status': checkout_record.guest_status,
                 'action': 'created_or_overwritten'
             })
+
+            # -----------------------------
+            # POST-PROCESSING: buat service record
+            # -----------------------------
+            staff_schedules = Schedule.objects.filter(schedule_date=check_out, user__role="staff")
+
+            service_records_created = []
+            for schedule in staff_schedules:
+                user = schedule.user
+                already_exists = Record.objects.filter(
+                    user=user,
+                    room=room,
+                    date=check_out
+                ).exists()
+
+                if not already_exists:
+                    service_record = Record.objects.create(
+                        room=room,
+                        user=user,
+                        date=check_out,
+                        record_start=None,
+                        record_complete=None
+                    )
+                    service_records_created.append({
+                        "record_id": service_record.record_id,
+                        "user": user.username,
+                        "room": room.room_name,
+                        "date": str(check_out)
+                    })
             
             return Response({
                 'message': 'Occupancy data added successfully (dates shifted +1 day)',
                 'records_created': len(records_created),
-                'details': records_created
+                'details': records_created,
+                'service_records_created': service_records_created
             }, status=status.HTTP_201_CREATED)
             
         except ValueError as e:
