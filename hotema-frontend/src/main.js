@@ -13,6 +13,8 @@ import Aura from '@primeuix/themes/aura'
 // ✅ Impor komponen yang dibutuhkan
 import Calendar from 'primevue/calendar'
 import Dropdown from 'primevue/dropdown'
+import ToastService from 'primevue/toastservice'
+import Toast from 'primevue/toast'
 
 
 const app = createApp(App)
@@ -25,6 +27,9 @@ app.use(PrimeVue, {
     preset: Aura,
   },
 })
+
+app.use(ToastService)
+app.component('Toast', Toast)
 
 // ✅ Daftarkan komponen PrimeVue secara global
 app.component('Calendar', Calendar)

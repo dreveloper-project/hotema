@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/room/', include('room.urls')),
     path('api/team-management/', include('team_management.urls')),
     path('api/presence/', include('presence.urls')),
+    path('api/absent/', include('absent.urls')),
 ]
 
 if settings.DEBUG:

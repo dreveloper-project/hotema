@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'room',
     'team_management',
     'presence',
+    'absent',
 ]
 
 REST_FRAMEWORK = {
