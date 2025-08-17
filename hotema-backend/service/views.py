@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from datetime import datetime, timedelta
 from room.models import Room
 from customuser.models import CustomUser
-from .models import Record
+from .models import Record, TaskMonitoring
 User = get_user_model()
 
 
@@ -129,3 +129,44 @@ class CreateRecordAPIView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+
+
+# service/views.py
+class RecordWithTaskView(APIView):
+    def get(self, request, *args, **kwargs):
+        records = Record.objects.select_related("room", "user").all()
+
+        result = []
+        for record in records:
+            task_monitor = TaskMonitoring.objects.filter(record=record).select_related("user").first()
+
+            result.append({
+                "record_id": record.record_id,  
+                "kamar": record.room.room_name,
+                "jadwal": record.date.strftime("%Y-%m-%d"),
+                "waktu_mulai": record.record_start.strftime("%H:%M:%S") if record.record_start else None,
+                "waktu_selesai": record.record_complete.strftime("%H:%M:%S") if record.record_complete else None,
+                "staff": record.user.fullname,
+                "supervisor": task_monitor.user.fullname if task_monitor else None,
+                "qc_status": task_monitor.tm_status if task_monitor else None,
+            })
+
+        return Response(result, status=status.HTTP_200_OK)
+    
+
+class DeleteRecordView(APIView):
+
+
+    def post(self, request, *args, **kwargs):
+        record_id = request.data.get("record_id")
+        if not record_id:
+            return Response({"error": "record_id wajib dikirim"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            record = Record.objects.get(pk=record_id)
+            record.delete()
+            return Response({"message": f"Record {record_id} berhasil dihapus"}, status=status.HTTP_200_OK)
+        except Record.DoesNotExist:
+            return Response({"error": "Record tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
