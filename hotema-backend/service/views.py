@@ -170,3 +170,49 @@ class DeleteRecordView(APIView):
             return Response({"message": f"Record {record_id} berhasil dihapus"}, status=status.HTTP_200_OK)
         except Record.DoesNotExist:
             return Response({"error": "Record tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+
+
+# part milik staff
+# 
+# 
+
+
+class StaffTaskView(APIView):
+    def post(self, request, *args, **kwargs):
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response({"error": "user_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Ambil semua record untuk user_id
+        records = Record.objects.filter(user_id=user_id)
+
+        result = []
+        for record in records:
+            # Ambil task monitoring terkait record
+            task_monitorings = TaskMonitoring.objects.filter(record=record)
+
+            if task_monitorings.exists():
+                for tm in task_monitorings:
+                    # Skip kalau status = aprooved
+                    if tm.tm_status.lower() == "aprooved":
+                        continue
+                    result.append({
+                        "record_id": record.record_id,
+                        "room_id": record.room_id,
+                        "record_start": record.record_start,
+                        "record_complete": record.record_complete,
+                        "tm_user": tm.user.username,
+                        "tm_status": tm.tm_status
+                    })
+            else:
+                # Jika tidak ada task monitoring
+                result.append({
+                    "record_id": record.record_id,
+                    "room_id": record.room_id,
+                    "record_start": record.record_start,
+                    "record_complete": record.record_complete,
+                    "tm_user": None,
+                    "tm_status": None
+                })
+
+        return Response(result, status=status.HTTP_200_OK)

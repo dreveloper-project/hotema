@@ -37,29 +37,50 @@ class AbsentStatusView(APIView):
 
 
 class CreateAbsentView(APIView):
+    """
+    Endpoint untuk mencatat absen masuk.
+    - User hanya bisa absen masuk sekali per hari.
+    - Jika sudah absen, kembalikan data absen yang sudah ada (bukan error).
+    """
+
     def post(self, request):
         user_id = request.data.get("user_id")
 
-        if not user_id:
-            return Response({"error": "user_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        # Validasi user_id wajib ada
+        if user_id is None:
+            return Response(
+                {"error": "user_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        # Validasi user ada
         try:
             user = User.objects.get(pk=user_id)
         except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         today = timezone.localdate()
 
-        # cek apakah user sudah absen masuk hari ini
+        # Cek apakah user sudah absen masuk hari ini
         existing_absent = Absent.objects.filter(
             user=user,
             time_in__date=today
         ).first()
 
         if existing_absent:
-            return Response({"error": "User sudah absen masuk hari ini"}, status=status.HTTP_400_BAD_REQUEST)
+            # ✅ Jangan balikin error, cukup info + data existing
+            return Response({
+                "message": "User sudah absen masuk hari ini",
+                "absent_id": existing_absent.absent_id,
+                "user": user.username,
+                "time_in": existing_absent.time_in,
+                "status": "IN_ALREADY"
+            }, status=status.HTTP_200_OK)
 
-        # buat record baru
+        # ✅ Buat record baru kalau belum ada
         absent = Absent.objects.create(
             user=user,
             time_in=timezone.now()
@@ -69,10 +90,10 @@ class CreateAbsentView(APIView):
             "message": "Absent masuk berhasil dicatat",
             "absent_id": absent.absent_id,
             "user": user.username,
-            "time_in": absent.time_in
+            "time_in": absent.time_in,
+            "status": "IN_SUCCESS"
         }, status=status.HTTP_201_CREATED)
-
-
+    
 class AbsentOutView(APIView):
     def post(self, request):
         user_id = request.data.get("user_id")

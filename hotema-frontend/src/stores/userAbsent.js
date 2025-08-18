@@ -30,6 +30,7 @@ async absentIn(userId) {
     this.status = 'Absen Pulang'   // set manual
   } catch (err) {
     this.handleError(err)
+    console.log(err)
   }
 },
 

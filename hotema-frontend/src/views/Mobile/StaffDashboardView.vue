@@ -46,6 +46,7 @@ const handleAbsentClick = async () => {
   if (!user.value?.user_id) return
 
   if (status.value === null || status.value === 'Absen Masuk') {
+    console.log(user.value.user_id)
     await absentStore.absentIn(user.value.user_id)
   } else if (status.value === 'Absen Pulang') {
     await absentStore.absentOut(user.value.user_id)
