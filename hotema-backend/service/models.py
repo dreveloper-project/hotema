@@ -29,7 +29,6 @@ class Record(models.Model):
     def __str__(self):
         return f"Record {self.record_id} - Room {self.room.room_name} - User {self.user.username} - {self.date}"
 
-
 class TaskMonitoring(models.Model):
     """Model to monitor task status for records."""
     
@@ -38,7 +37,9 @@ class TaskMonitoring(models.Model):
         CustomUser, 
         on_delete=models.CASCADE, 
         related_name='task_monitorings',
-        db_column='user_id'
+        db_column='user_id',
+        null=True,        # boleh NULL di database
+        blank=True        # boleh kosong di form/admin
     )
     record = models.ForeignKey(
         Record, 
@@ -55,3 +56,4 @@ class TaskMonitoring(models.Model):
     
     def __str__(self):
         return f"Task {self.tm_id} - Status: {self.tm_status} - Record {self.record.record_id}"
+

@@ -10,7 +10,8 @@ from room.models import Room
 from customuser.models import CustomUser
 from .models import Record, TaskMonitoring
 User = get_user_model()
-
+from django.utils import timezone
+from django.utils.timezone import now
 
 class StaffAndRoomByDateAPIView(APIView):
     def post(self, request, *args, **kwargs):
@@ -175,8 +176,6 @@ class DeleteRecordView(APIView):
 # part milik staff
 # 
 # 
-
-
 class StaffTaskView(APIView):
     def post(self, request, *args, **kwargs):
         user_id = request.data.get("user_id")
@@ -184,7 +183,7 @@ class StaffTaskView(APIView):
             return Response({"error": "user_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Ambil semua record untuk user_id
-        records = Record.objects.filter(user_id=user_id)
+        records = Record.objects.filter(user_id=user_id).select_related("room")
 
         result = []
         for record in records:
@@ -194,14 +193,16 @@ class StaffTaskView(APIView):
             if task_monitorings.exists():
                 for tm in task_monitorings:
                     # Skip kalau status = aprooved
-                    if tm.tm_status.lower() == "aprooved":
+                    if tm.tm_status and tm.tm_status.lower() == "aprooved":
                         continue
                     result.append({
                         "record_id": record.record_id,
                         "room_id": record.room_id,
+                        "room_name": record.room.room_name,
+                        "date": record.date,   # tambahkan date
                         "record_start": record.record_start,
                         "record_complete": record.record_complete,
-                        "tm_user": tm.user.username,
+                        "tm_user": tm.user.username if tm.user else None,  # <-- cek None
                         "tm_status": tm.tm_status
                     })
             else:
@@ -209,6 +210,8 @@ class StaffTaskView(APIView):
                 result.append({
                     "record_id": record.record_id,
                     "room_id": record.room_id,
+                    "room_name": record.room.room_name,
+                    "date": record.date,   # tambahkan date
                     "record_start": record.record_start,
                     "record_complete": record.record_complete,
                     "tm_user": None,
@@ -216,3 +219,55 @@ class StaffTaskView(APIView):
                 })
 
         return Response(result, status=status.HTTP_200_OK)
+
+
+
+class RecordStartView(APIView):
+    def post(self, request, *args, **kwargs):
+        record_id = request.data.get("record_id")
+        if not record_id:
+            return Response({"error": "record_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            record = Record.objects.get(record_id=record_id)
+        except Record.DoesNotExist:
+            return Response({"error": "Record not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # isi waktu mulai dengan waktu sekarang
+        record.record_start = timezone.now().time()
+        record.save(update_fields=["record_start"])
+
+        return Response({
+            "message": "Record start updated successfully",
+            "record_id": record.record_id,
+            "record_start": record.record_start
+        }, status=status.HTTP_200_OK)
+
+
+class RecordCompleteView(APIView):
+    def post(self, request):
+        record_id = request.data.get("record_id")
+        if not record_id:
+            return Response({"error": "record_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            record = Record.objects.get(pk=record_id)
+        except Record.DoesNotExist:
+            return Response({"error": "Record not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # isi record_complete
+        record.record_complete = now()
+        record.save()
+
+        # buat task monitoring otomatis
+        TaskMonitoring.objects.create(
+            user=None,              # belum di-QC
+            record=record,          # relasi ke record
+            tm_status="Uncheck"     # default status QC
+        )
+
+        return Response({
+            "message": "Record marked as completed and task monitoring created.",
+            "record_id": record.record_id,
+            "record_complete": record.record_complete,
+        }, status=status.HTTP_200_OK)

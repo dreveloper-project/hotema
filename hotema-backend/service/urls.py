@@ -7,4 +7,6 @@ urlpatterns = [
     path('records-with-task/', views.RecordWithTaskView.as_view(), name='records-with-task'),
     path('delete-record/', views.DeleteRecordView.as_view(), name='delete-record'),
     path('staff-task/', views.StaffTaskView.as_view(), name='staff-task'),
+    path('start/', views.RecordStartView.as_view(), name='start'),
+    path('complete/', views.RecordCompleteView.as_view(), name='complete'),
 ]
