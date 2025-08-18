@@ -9,4 +9,7 @@ urlpatterns = [
     path('staff-task/', views.StaffTaskView.as_view(), name='staff-task'),
     path('start/', views.RecordStartView.as_view(), name='start'),
     path('complete/', views.RecordCompleteView.as_view(), name='complete'),
+    path('task-monitoring/', views.SupervisorTaskView.as_view(), name='task-monitoring'),
+    path('task/update-status/', views.UpdateTaskStatusView.as_view(), name='task-update-status'),
+    
 ]

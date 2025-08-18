@@ -14,6 +14,7 @@ const isOpen = ref(false)
 
 const username = ref('')
 const password = ref('')
+const showPassword = ref(false) // 👈 state untuk toggle password
 
 function checkIsMobile() {
   isMobile.value = window.matchMedia('(max-width: 768px)').matches
@@ -54,7 +55,6 @@ async function handleLogin(e) {
     const role = auth.user?.role
 
     if (!role) {
-      // Role null → logout, tetap di halaman login, munculkan PopUp
       auth.logout()
       message.value = 'Akun ini belum disetujui. Silakan login ulang atau hubungi admin.'
       isOpen.value = true
@@ -68,7 +68,6 @@ async function handleLogin(e) {
     } else if (role === 'supervisor') {
       router.push({ name: 'spv-dashboard' })
     } else {
-      // fallback role tidak dikenali
       auth.logout()
       message.value = 'Login gagal: role tidak dikenali.'
       isOpen.value = true
@@ -79,7 +78,6 @@ async function handleLogin(e) {
     isOpen.value = true
   }
 }
-
 </script>
 
 <template>
@@ -87,7 +85,6 @@ async function handleLogin(e) {
   <PopUp v-if="isOpen" @close="isOpen = false" class="font-poppins">
     <h2 class="text-xl font-semibold mb-4">Pesan</h2>
     <p class="mb-4">{{ message }}</p>
-    
   </PopUp>
 
   <!-- HALAMAN LOGIN -->
@@ -129,14 +126,22 @@ async function handleLogin(e) {
             />
           </div>
 
-          <div class="flex flex-col">
+          <div class="flex flex-col relative">
             <label for="password" class="text-sm mb-1">Password:</label>
             <input
               v-model="password"
-              type="password"
+              :type="showPassword ? 'text' : 'password'"
               id="password"
-              class="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#910a67]"
+              class="border border-gray-300 rounded px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-[#910a67]"
             />
+            <!-- Tombol toggle password -->
+            <button
+              type="button"
+              class="absolute right-2 top-8 text-sm text-[#910a67] hover:underline"
+              @click="showPassword = !showPassword"
+            >
+              {{ showPassword ? 'Sembunyikan' : 'Lihat' }}
+            </button>
           </div>
 
           <button
@@ -145,6 +150,14 @@ async function handleLogin(e) {
           >
             Login
           </button>
+
+          <!-- Link Register -->
+          <p class="text-sm text-center mt-2">
+            Belum punya akun?
+            <RouterLink  to="/register" v-slot="{ navigate }">
+            <a href="#" @click="navigate" class="text-[#910a67] hover:underline">Register di sini</a>
+            </RouterLink>
+          </p>
         </form>
       </div>
     </div>

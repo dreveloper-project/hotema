@@ -1,4 +1,6 @@
 # service/api_views.py
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -12,7 +14,8 @@ from .models import Record, TaskMonitoring
 User = get_user_model()
 from django.utils import timezone
 from django.utils.timezone import now
-
+from django.http import JsonResponse
+from django.views import View
 class StaffAndRoomByDateAPIView(APIView):
     def post(self, request, *args, **kwargs):
         date_str = request.data.get("date")  # ambil date dari body JSON
@@ -271,3 +274,63 @@ class RecordCompleteView(APIView):
             "record_id": record.record_id,
             "record_complete": record.record_complete,
         }, status=status.HTTP_200_OK)
+    
+
+
+class SupervisorTaskView(View):
+    def get(self, request):
+        # ambil semua task dengan status "Uncheck" atau "Unaprooved"
+        tasks = TaskMonitoring.objects.filter(tm_status__in=["Uncheck", "Unaprooved"]).select_related("record__room")
+
+        data = []
+        for task in tasks:
+            data.append({
+                "tm_id": task.tm_id,
+                "tm_status": task.tm_status,
+                "record_id": task.record.record_id,
+                "room_id": task.record.room.room_id,
+                "room_name": task.record.room.room_name,
+                "user_id": task.record.user.user_id,
+                "username": task.record.user.fullname,
+                "date": task.record.date,
+            })
+
+        return JsonResponse(data, safe=False)
+    
+@method_decorator(csrf_exempt, name='dispatch')
+class UpdateTaskStatusView(APIView):
+    def post(self, request):
+        try:
+            tm_id = request.data.get("tm_id")
+            status_value = request.data.get("status")
+
+            if not tm_id or not status_value:
+                return Response(
+                    {"error": "tm_id dan status diperlukan"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if status_value not in ["Approved", "Unapproved"]:
+                return Response(
+                    {"error": "Status harus 'Approved' atau 'Unapproved'"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            task = TaskMonitoring.objects.filter(tm_id=tm_id).first()
+            if not task:
+                return Response(
+                    {"error": "Task tidak ditemukan"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            task.tm_status = status_value
+            task.save()
+
+            return Response({
+                "message": f"Task {tm_id} berhasil diupdate ke status {status_value}",
+                "tm_id": task.tm_id,
+                "tm_status": task.tm_status
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
