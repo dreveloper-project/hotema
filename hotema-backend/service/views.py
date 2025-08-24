@@ -136,8 +136,6 @@ class CreateRecordAPIView(APIView):
 
 
 
-
-# service/views.py
 class RecordWithTaskView(APIView):
     def get(self, request, *args, **kwargs):
         records = Record.objects.select_related("room", "user").all()
@@ -152,14 +150,12 @@ class RecordWithTaskView(APIView):
                 "jadwal": record.date.strftime("%Y-%m-%d"),
                 "waktu_mulai": record.record_start.strftime("%H:%M:%S") if record.record_start else None,
                 "waktu_selesai": record.record_complete.strftime("%H:%M:%S") if record.record_complete else None,
-                "staff": record.user.fullname,
-                "supervisor": task_monitor.user.fullname if task_monitor else None,
+                "staff": record.user.fullname if record.user else None,  # lebih aman
+                "supervisor": task_monitor.user.fullname if (task_monitor and task_monitor.user) else None,
                 "qc_status": task_monitor.tm_status if task_monitor else None,
-            })
+            }) 
 
         return Response(result, status=status.HTTP_200_OK)
-    
-
 class DeleteRecordView(APIView):
 
 

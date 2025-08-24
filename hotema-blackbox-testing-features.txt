@@ -1,0 +1,216 @@
+# Daftar Lengkap Fitur Sistem HoTema untuk Black Box Testing
+
+## 1. Fitur Autentikasi & Manajemen User
+
+### 1.1. Login & Logout
+- **Login User**
+  - Deskripsi: Pengguna dapat login menggunakan username dan password untuk mendapatkan akses token JWT
+  - Aktor: Admin, Staff, Supervisor, User Umum
+
+- **Logout User**
+  - Deskripsi: Pengguna dapat logout untuk menghapus session dan token akses
+  - Aktor: Admin, Staff, Supervisor, User Umum
+
+### 1.2. Registrasi User
+- **Register User Baru**
+  - Deskripsi: User baru dapat mendaftar dengan role otomatis (admin untuk user pertama, null untuk selanjutnya)
+  - Aktor: User Umum (self-registration)
+
+### 1.3. Manajemen User
+- **Lihat User Tanpa Role**
+  - Deskripsi: Admin dapat melihat daftar user yang belum memiliki role
+  - Aktor: Admin
+
+- **Update Role User**
+  - Deskripsi: Admin dapat mengubah role user menjadi staff atau supervisor
+  - Aktor: Admin
+
+- **Lihat User Berdasarkan Role**
+  - Deskripsi: Admin dapat melihat user yang memiliki role tertentu (staff/supervisor)
+  - Aktor: Admin
+
+- **Detail User**
+  - Deskripsi: Admin dapat melihat detail informasi user termasuk foto profil
+  - Aktor: Admin
+
+- **Hapus User**
+  - Deskripsi: Admin dapat menghapus user beserta foto profilnya
+  - Aktor: Admin
+
+- **Update Role User by ID**
+  - Deskripsi: Admin dapat mengubah role user berdasarkan user_id
+  - Aktor: Admin
+
+## 2. Fitur Manajemen Kamar (Room Management)
+
+### 2.1. Manajemen Data Kamar
+- **Lihat Record Kamar Hari Ini**
+  - Deskripsi: Melihat status semua kamar untuk hari ini termasuk status tamu dan kebersihan
+  - Aktor: Admin, Staff, Supervisor
+
+- **Lihat Record Kamar Berdasarkan Tanggal**
+  - Deskripsi: Melihat status kamar untuk tanggal tertentu
+  - Aktor: Admin, Staff, Supervisor
+
+- **Tambah Kamar Baru**
+  - Deskripsi: Admin dapat menambahkan kamar baru dengan nama dan tipe kamar
+  - Aktor: Admin
+
+- **Lihat Semua Kamar**
+  - Deskripsi: Melihat daftar semua kamar yang tersedia
+  - Aktor: Admin, Staff, Supervisor
+
+### 2.2. Manajemen Occupancy
+- **Lihat Tabel Occupancy**
+  - Deskripsi: Melihat tabel occupancy dengan status IN/OUT untuk range tanggal
+  - Aktor: Admin, Staff, Supervisor
+
+- **Tambah Data Occupancy**
+  - Deskripsi: Admin dapat menambahkan data occupancy dengan check-in/check-out otomatis
+  - Aktor: Admin
+
+- **Hapus Data Occupancy**
+  - Deskripsi: Admin dapat menghapus data occupancy
+  - Aktor: Admin
+
+## 3. Fitur Manajemen Shift & Jadwal
+
+### 3.1. Manajemen Shift
+- **Lihat Daftar Shift**
+  - Deskripsi: Melihat semua shift yang tersedia dengan jam mulai dan selesai
+  - Aktor: Admin, Staff, Supervisor
+
+- **Update Shift**
+  - Deskripsi: Admin dapat mengubah jam mulai dan selesai shift
+  - Aktor: Admin
+
+### 3.2. Manajemen Jadwal
+- **Lihat Jadwal User per Bulan**
+  - Deskripsi: Melihat jadwal kerja user untuk bulan tertentu
+  - Aktor: Admin, Staff, Supervisor
+
+- **Set Shift untuk User**
+  - Deskripsi: Admin dapat mengatur shift untuk user pada tanggal tertentu
+  - Aktor: Admin
+
+## 4. Fitur Absensi & Kehadiran
+
+### 4.1. Absensi Masuk
+- **Cek Status Absen**
+  - Deskripsi: User dapat cek status absensi hari ini (masuk/pulang/selesai)
+  - Aktor: Staff, Supervisor
+
+- **Absen Masuk**
+  - Deskripsi: Staff dapat mencatat absen masuk (hanya sekali per hari)
+  - Aktor: Staff, Supervisor
+
+### 4.2. Absensi Pulang
+- **Absen Pulang**
+  - Deskripsi: Staff dapat mencatat absen pulang setelah selesai bekerja
+  - Aktor: Staff, Supervisor
+
+## 5. Fitur Manajemen Tugas & Monitoring
+
+### 5.1. Staff Task Management
+- **Lihat Tugas Staff**
+  - Deskripsi: Staff dapat melihat tugas yang belum diselesaikan
+  - Aktor: Staff
+
+- **Mulai Pekerjaan**
+  - Deskripsi: Staff dapat memulai pencatatan pekerjaan untuk record tertentu
+  - Aktor: Staff
+
+- **Selesai Pekerjaan**
+  - Deskripsi: Staff dapat menandai pekerjaan sebagai selesai
+  - Aktor: Staff
+
+### 5.2. Supervisor Task Monitoring
+- **Lihat Tugas Supervisor**
+  - Deskripsi: Supervisor dapat melihat semua tugas yang perlu di-QC
+  - Aktor: Supervisor
+
+- **Update Status Task**
+  - Deskripsi: Supervisor dapat mengupdate status task menjadi Approved/Unapproved
+  - Aktor: Supervisor
+
+- **Task Monitoring View**
+  - Deskripsi: Supervisor dapat melihat monitoring task dengan status Uncheck/Unapproved
+  - Aktor: Supervisor
+
+### 5.3. Record Management
+- **Buat Record Baru**
+  - Deskripsi: Membuat record baru untuk assignment staff ke kamar
+  - Aktor: Admin, Supervisor
+
+- **Lihat Record dengan Task**
+  - Deskripsi: Melihat semua record beserta task monitoring yang terkait
+  - Aktor: Admin, Supervisor, Staff
+
+- **Hapus Record**
+  - Deskripsi: Menghapus record yang sudah tidak digunakan
+  - Aktor: Admin, Supervisor
+
+## 6. Fitur Dashboard & Reporting
+
+### 6.1. Dashboard Views
+- **Dashboard Admin**
+  - Deskripsi: Dashboard utama admin dengan statistik dan overview sistem
+  - Aktor: Admin
+
+- **Dashboard Staff Mobile**
+  - Deskripsi: Dashboard mobile untuk staff dengan fitur absensi dan tugas
+  - Aktor: Staff
+
+- **Dashboard Supervisor Mobile**
+  - Deskripsi: Dashboard mobile untuk supervisor dengan monitoring task
+  - Aktor: Supervisor
+
+### 6.2. Reporting
+- **Laporan Staff & Kamar per Tanggal**
+  - Deskripsi: Melihat laporan staff yang bertugas dan kamar yang dikelola per tanggal
+  - Aktor: Admin, Supervisor
+
+- **Laporan Task Monitoring**
+  - Deskripsi: Laporan lengkap task monitoring dengan status QC
+  - Aktor: Admin, Supervisor
+
+## 7. Fitur Mobile (Responsive)
+
+### 7.1. Staff Mobile Features
+- **Staff Task View**
+  - Deskripsi: Interface mobile untuk staff melihat dan menyelesaikan tugas
+  - Aktor: Staff
+
+- **Staff Dashboard**
+  - Deskripsi: Dashboard mobile khusus untuk staff dengan absensi dan task
+  - Aktor: Staff
+
+### 7.2. Supervisor Mobile Features
+- **Supervisor Task View**
+  - Deskripsi: Interface mobile untuk supervisor monitoring task
+  - Aktor: Supervisor
+
+- **Supervisor Dashboard**
+  - Deskripsi: Dashboard mobile khusus untuk supervisor
+  - Aktor: Supervisor
+
+## Ringkasan Berdasarkan Aktor
+
+### Admin
+- Semua fitur manajemen user, kamar, occupancy, shift, jadwal, dan reporting
+- Full access ke semua endpoint dan dashboard
+
+### Staff
+- Login/logout, absensi (masuk/pulang), melihat tugas, update status pekerjaan
+- Akses ke dashboard staff dan mobile interface
+
+### Supervisor
+- Login/logout, monitoring task, update status QC, melihat laporan
+- Akses ke dashboard supervisor dan mobile interface
+
+### User Umum
+- Registrasi awal, login/logout
+- Role ditentukan otomatis saat registrasi
+
+---
+Dokumen ini berisi daftar lengkap fitur sistem HoTema untuk keperluan Black Box Testing berdasarkan analisis kode backend Django REST Framework dan frontend Vue.js yang komprehensif.

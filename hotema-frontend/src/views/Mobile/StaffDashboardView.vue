@@ -45,8 +45,8 @@ const handleLogout = () => {
 const handleAbsentClick = async () => {
   if (!user.value?.user_id) return
 
-  if (status.value === null || status.value === 'Absen Masuk') {
-    console.log(user.value.user_id)
+  // 🔧 Samakan dengan backend → "Absent Masuk"
+  if (status.value === null || status.value === 'Absent Masuk') {
     await absentStore.absentIn(user.value.user_id)
   } else if (status.value === 'Absen Pulang') {
     await absentStore.absentOut(user.value.user_id)
@@ -55,7 +55,7 @@ const handleAbsentClick = async () => {
 
 // 🔒 Cek akses ke task monitoring
 const handleTaskMonitoring = (navigate) => {
-  if (status.value === null || status.value === 'Absen Masuk') {
+  if (status.value === null || status.value === 'Absent Masuk') {
     toast.add({
       severity: 'warn',
       summary: 'Akses Ditolak',
